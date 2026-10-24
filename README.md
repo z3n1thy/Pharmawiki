@@ -1,6 +1,6 @@
 # Pharmapedia — Compound & Drug Search
 
-Pharmapedia is a search-first, static pharmacology reference. Start at the compound search to look up the locally curated dossiers or query public compound and medication catalogs. The other pages cover study evidence, pathway mapping, an atlas, evidence grading, and a browser-local protocol log.
+Pharmapedia is a search-first, static pharmacology reference. Start at the compound search to look up the locally curated dossiers or query public compound and medication catalogs. Selecting a result opens its own shareable hash-routed detail page; the study library, pathway map, atlas, evidence grading, and browser-local protocol log are separate routed views rather than one long page.
 
 ## Search coverage
 
@@ -9,7 +9,13 @@ Pharmapedia is a search-first, static pharmacology reference. Start at the compo
 - The bundled `data.js` currently contains **8 curated monographs** and **12 graded study claims**. It is a small reference set, not an exhaustive chemical index.
 - No single public source includes every compound and drug ever made. Catalog coverage varies by source; the search page links through to PubChem for broader results.
 
-Search terms are sent directly from the browser to PubChem and RxNorm to retrieve live matches. Pharmapedia does not store search history or run a search backend or analytics. The external services may process requests under their own policies. The protocol log is stored in browser `localStorage`; do not enter patient-identifying information.
+## Compound detail pages
+
+Each selected local, PubChem, or RxNorm result opens a separate route (for example, `#drug/local/semaglutide`). Curated records show bundled pharmacology and evidence details; external records show the chemical or medication identity data returned by their source. The detail view also provides a source-grounded overview (bundled for curated records, or assembled from a matched label excerpt when available), selected quick facts, source links, and a PubChem 2D chemical structure image when available. A structure drawing is not a picture of a tablet and cannot identify a physical pill.
+
+The “AI overview” heading is a human-readable summary, not a claim of live generation: curated text is bundled, and some external summaries are assembled from returned FDA-label text. This static app has no LLM backend or API key and does not generate individualized advice. U.S. FDA label sections (indications, adverse reactions, warnings, contraindications, and interactions) are requested from openFDA where a match is available. Labels differ by product, formulation, route, and revision; unmatched records and supplements may have no result. Use the linked official product information and DailyMed search to verify a specific medicine. A missing section or label match does not imply that no risk exists.
+
+Search terms are sent directly from the browser to PubChem and RxNorm to retrieve live matches. Opening a record can also request PubChem chemical properties/structure images and search openFDA for U.S. drug-label sections. Pharmapedia has no application server, analytics, or live AI/LLM backend; each external service may process requests under its own policies. The protocol log is stored in browser `localStorage`; do not enter patient-identifying information.
 
 ## Other modules
 

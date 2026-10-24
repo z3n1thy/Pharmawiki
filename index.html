@@ -45,12 +45,12 @@
       </a>
 
       <nav class="primary-nav" id="primary-nav" aria-label="Primary sections">
-        <a href="#top" class="is-active">Search</a>
-        <a href="#study-library">Studies</a>
-        <a href="#stack-checker">Pathways</a>
-        <a href="#brain-atlas">Brain atlas</a>
-        <a href="#evidence-grading">Evidence</a>
-        <a href="#protocol-log">Protocol</a>
+        <a href="#search" class="is-active" data-nav-page="search">Search</a>
+        <a href="#studies" data-nav-page="studies">Studies</a>
+        <a href="#pathways" data-nav-page="pathways">Pathways</a>
+        <a href="#atlas" data-nav-page="atlas">Brain atlas</a>
+        <a href="#evidence" data-nav-page="evidence">Evidence</a>
+        <a href="#protocol" data-nav-page="protocol">Protocol</a>
       </nav>
 
       <div class="nav-actions">
@@ -70,7 +70,7 @@
 
   <main id="main-content">
     <!-- Search workspace: local dossiers plus live public catalog lookups -->
-    <section class="search-page" id="top" aria-labelledby="search-page-title">
+    <section class="search-page page-view" id="top" data-page="search" aria-labelledby="search-page-title">
       <div class="container">
         <div class="search-page-heading">
           <div>
@@ -108,7 +108,7 @@
             <button type="button" class="btn btn-outline-dark clear-search-btn" id="clear-compound-search">Clear</button>
           </div>
           <p class="search-help">
-            Live queries go directly to PubChem and RxNorm (U.S. drug terminology); neither catalog is exhaustive. Pharmapedia does not save search history.
+            Live queries go directly to PubChem and RxNorm (U.S. drug terminology); opening a record may also request PubChem properties, structure images, and openFDA label data. Catalogs are not exhaustive, and Pharmapedia does not save search history.
           </p>
           <div class="quick-search-row">
             <span class="quick-search-label">Quick lookups</span>
@@ -127,23 +127,96 @@
             <div class="catalog-results" id="catalog-results" aria-live="polite">
               <div class="catalog-empty-state">
                 <h2>Start with a compound or medicine</h2>
-                <p>Type at least two characters to search PubChem and RxNorm. Select a result to see identifiers and available reference data.</p>
+                <p>Type at least two characters to search PubChem and RxNorm. Open a result for its own detail page, structure image, summary, and available label information.</p>
               </div>
             </div>
           </section>
 
-          <aside class="dossier-card" aria-live="polite" aria-label="Selected compound or drug details">
-            <div class="dossier-topbar">
-              <span id="dossier-source-label">Record details</span>
-              <div class="dossier-topbar-ids" id="dossier-ids"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Separate routed page for each selected compound or medication -->
+    <section class="compound-detail-page page-view" id="compound-detail-page" data-page="drug" hidden aria-labelledby="drug-page-title">
+      <div class="container">
+        <div class="drug-page-toolbar">
+          <a href="#search" class="back-to-search">← Back to compound search</a>
+          <span class="drug-page-record-source" id="drug-page-record-source">Reference record</span>
+        </div>
+
+        <div class="drug-page-heading">
+          <div class="drug-page-heading-copy">
+            <div class="eyebrow">
+              <span class="eyebrow-code">COMPOUND RECORD</span>
+              <span id="drug-page-type">Medication &amp; chemical reference</span>
             </div>
-            <div class="dossier-body" id="dossier-body">
-              <div class="empty-detail-state">
-                <span class="empty-detail-mark" aria-hidden="true">⌕</span>
-                <h2>Select a search result</h2>
-                <p>Compound identifiers, chemical properties, or curated pharmacology details will appear here.</p>
+            <h1 id="drug-page-title" tabindex="-1">Compound detail</h1>
+            <p class="drug-page-subtitle" id="drug-page-subtitle">Select a record from search to view its details.</p>
+            <div class="drug-page-identifiers" id="drug-page-identifiers"></div>
+          </div>
+          <figure class="drug-structure-card">
+            <div class="drug-structure-frame">
+              <img id="drug-structure-image" alt="" loading="lazy" hidden />
+              <div class="drug-structure-placeholder" id="drug-structure-placeholder">Chemical structure image loads from PubChem when available.</div>
+            </div>
+            <figcaption>2D chemical structure — not a photo or pill identification. Tablet appearance varies by product and manufacturer.</figcaption>
+          </figure>
+        </div>
+
+        <div class="drug-page-layout">
+          <div class="drug-primary-column">
+            <section class="drug-info-card" aria-labelledby="drug-overview-heading">
+              <div class="module-bar">
+                <h2 class="module-bar-title" id="drug-overview-heading">AI overview</h2>
+                <span class="overview-origin-label">Source-grounded · not a live AI response</span>
               </div>
-            </div>
+              <div class="drug-overview-body" id="drug-overview">
+                <p>Open a compound record from search to load its overview.</p>
+              </div>
+            </section>
+
+            <section class="drug-info-card" aria-labelledby="drug-label-heading">
+              <div class="module-bar">
+                <h2 class="module-bar-title" id="drug-label-heading">Uses, side effects &amp; warnings</h2>
+                <span class="overview-origin-label">U.S. FDA label data</span>
+              </div>
+              <p class="drug-label-disclaimer">Label information is U.S.-specific and can vary by brand, formulation, route, and indication. It is not a complete list and is not a substitute for the current product leaflet or a clinician.</p>
+              <div class="drug-label-state" id="drug-label-state" role="status" aria-live="polite">Looking for an FDA label for this record…</div>
+              <div class="drug-label-grid" id="drug-label-grid" hidden>
+                <section class="drug-label-field"><h3>What it is used for</h3><div id="drug-label-indications"></div></section>
+                <section class="drug-label-field"><h3>Reported side effects</h3><div id="drug-label-adverse"></div></section>
+                <section class="drug-label-field"><h3>Warnings</h3><div id="drug-label-warnings"></div></section>
+                <section class="drug-label-field"><h3>Contraindications</h3><div id="drug-label-contraindications"></div></section>
+                <section class="drug-label-field"><h3>Interactions</h3><div id="drug-label-interactions"></div></section>
+              </div>
+            </section>
+
+            <section class="drug-info-card" aria-labelledby="curated-pharmacology-heading">
+              <div class="module-bar">
+                <h2 class="module-bar-title" id="curated-pharmacology-heading">Curated pharmacology &amp; evidence</h2>
+                <span class="dossier-source-pill" id="dossier-source-label">Catalog record</span>
+              </div>
+              <div class="dossier-identifiers" id="dossier-ids"></div>
+              <div class="dossier-body" id="dossier-body">
+                <div class="empty-detail-state"><p>Loading available reference data…</p></div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="drug-sidebar">
+            <section class="drug-info-card">
+              <div class="module-bar"><h2 class="module-bar-title">Quick facts</h2></div>
+              <div class="drug-facts-body" id="drug-facts"><p>Facts will appear when a record is opened.</p></div>
+            </section>
+            <section class="drug-info-card">
+              <div class="module-bar"><h2 class="module-bar-title">Source records</h2></div>
+              <div class="drug-source-links" id="drug-source-links">
+                <a id="drug-pubchem-link" href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubChem record ↗</a>
+                <a id="drug-rxnorm-link" href="https://rxnav.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">RxNorm record ↗</a>
+                <a id="drug-fda-link" href="https://api.fda.gov/" target="_blank" rel="noopener noreferrer" hidden>openFDA label search ↗</a>
+                <a id="drug-dailymed-link" href="https://dailymed.nlm.nih.gov/dailymed/" target="_blank" rel="noopener noreferrer">Search DailyMed labels ↗</a>
+              </div>
+            </section>
           </aside>
         </div>
       </div>
@@ -152,7 +225,7 @@
     <!-- ====================================================================
          STUDY LIBRARY: EVIDENCE-BACKED CLAIMS LEDGER
          ==================================================================== -->
-    <section class="section-block" id="study-library">
+    <section class="section-block page-view" id="study-library" data-page="studies" hidden>
       <div class="container">
         <div class="section-header-row">
           <div>
@@ -219,7 +292,7 @@
     <!-- ====================================================================
          PATHWAY MAP & INTERACTIVE STACK CHECKER VISUALIZATION
          ==================================================================== -->
-    <section class="section-block" id="stack-checker">
+    <section class="section-block page-view" id="stack-checker" data-page="pathways" hidden>
       <div class="container" id="pathway-map">
         <div class="section-header-row">
           <div>
@@ -323,7 +396,7 @@
     <!-- ====================================================================
          BRAIN ATLAS TEASER: NEUROANATOMICAL RECEPTOR & BBB DENSITY
          ==================================================================== -->
-    <section class="section-block" id="brain-atlas">
+    <section class="section-block page-view" id="brain-atlas" data-page="atlas" hidden>
       <div class="container">
         <div class="section-header-row">
           <div>
@@ -504,7 +577,7 @@
     <!-- ====================================================================
          EVIDENCE GRADING HIERARCHY: TIERS A–E + TRANSLATION COMPARATOR
          ==================================================================== -->
-    <section class="section-block" id="evidence-grading">
+    <section class="section-block page-view" id="evidence-grading" data-page="evidence" hidden>
       <div class="container">
         <div class="section-header-row">
           <div>
@@ -554,7 +627,7 @@
     <!-- ====================================================================
          LOCAL PROTOCOL LOG
          ==================================================================== -->
-    <section class="section-block" id="protocol-log">
+    <section class="section-block page-view" id="protocol-log" data-page="protocol" hidden>
       <div class="container">
         <div class="section-header-row">
           <div>
@@ -686,11 +759,11 @@
         <div>
           <h3 class="footer-col-title">Modules</h3>
           <ul class="footer-links">
-            <li><a href="#top">Compound Monograph Search</a></li>
-            <li><a href="#study-library">Graded Study Library</a></li>
-            <li><a href="#stack-checker">Pathway &amp; Stack Checker</a></li>
-            <li><a href="#brain-atlas">Sagittal Brain Atlas</a></li>
-            <li><a href="#evidence-grading">5-Tier Evidence Rules</a></li>
+            <li><a href="#search">Compound Search</a></li>
+            <li><a href="#studies">Graded Study Library</a></li>
+            <li><a href="#pathways">Pathway &amp; Stack Checker</a></li>
+            <li><a href="#atlas">Sagittal Brain Atlas</a></li>
+            <li><a href="#evidence">5-Tier Evidence Rules</a></li>
           </ul>
         </div>
 
@@ -700,6 +773,7 @@
             <li><a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubMed / MEDLINE (NCBI)</a></li>
             <li><a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubChem Compound Database</a></li>
             <li><a href="https://rxnav.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">RxNorm / RxNav Drug Database</a></li>
+            <li><a href="https://open.fda.gov/apis/drug/label/" target="_blank" rel="noopener noreferrer">openFDA drug labels</a></li>
             <li><a href="https://www.ebi.ac.uk/chembl/" target="_blank" rel="noopener noreferrer">ChEMBL Bioactivity DB</a></li>
             <li><a href="https://www.guidetopharmacology.org/" target="_blank" rel="noopener noreferrer">IUPHAR / BPS Pharmacology</a></li>
             <li><a href="https://human.brain-map.org/" target="_blank" rel="noopener noreferrer">Allen Human Brain Atlas</a></li>
@@ -712,7 +786,7 @@
             <li><a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
             <li><a href="./LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
             <li><a href="./data.js" target="_blank" rel="noopener noreferrer">Inspect Raw Dataset (<code>data.js</code>)</a></li>
-            <li><a href="#protocol-log">Local Protocol Log</a></li>
+            <li><a href="#protocol">Local Protocol Log</a></li>
           </ul>
         </div>
       </div>

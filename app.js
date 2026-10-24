@@ -89,6 +89,124 @@
     rxnormError: false
   };
   var detailRequestId = 0;
+  var currentDrugFacts = [];
+
+  var AI_OVERVIEWS = {
+    semaglutide: "Semaglutide is a long-acting GLP-1 receptor agonist. It mimics an incretin hormone, supporting glucose-dependent insulin release and reducing appetite; it can also slow stomach emptying. Approved uses differ between products and formulations, including type 2 diabetes and chronic weight management. This profile summarizes selected research, not an individual treatment plan.",
+    escitalopram: "Escitalopram is a selective serotonin reuptake inhibitor (SSRI) used for depression and, depending on the product label, anxiety disorders. It increases serotonin signalling by blocking the serotonin transporter. Benefit and adverse effects vary by person; check the official label below for warnings and reported reactions.",
+    metformin: "Metformin is a biguanide commonly prescribed for type 2 diabetes. It primarily lowers liver glucose production and improves insulin sensitivity; it is not an insulin substitute. The curated profile also notes renal transporter interactions and product-specific warnings.",
+    "magnesium-threonate": "Magnesium L-threonate is a magnesium salt sold mainly as a dietary supplement, not an FDA-approved treatment for cognitive disease. The bundled evidence includes animal work and a small human pilot; those findings do not establish that it prevents or treats memory problems. Supplement contents and evidence quality can vary.",
+    "cdp-choline": "Citicoline (CDP-choline) is a choline-containing compound involved in phospholipid synthesis and cholinergic pathways. It is sold as a supplement in some markets and has been studied for neurological outcomes. The bundled evidence includes a large stroke trial that did not show benefit on its primary outcome, alongside smaller studies.",
+    nac: "N-acetylcysteine (NAC) is a precursor used by the body to make glutathione and is also used as a mucolytic. Acetylcysteine has an FDA-approved role in acetaminophen overdose; approved routes and uses depend on the product. The profile distinguishes these established uses from less certain supplement claims.",
+    bupropion: "Bupropion is an aminoketone antidepressant that inhibits norepinephrine and dopamine reuptake. Depending on formulation and label, it is used for depression, seasonal affective disorder, or smoking cessation. It also inhibits CYP2D6, so interactions and formulation-specific warnings matter.",
+    "lithium-lowdose": "Lithium carbonate is a mood-stabilizing prescription medicine used in bipolar disorder. It has a narrow therapeutic range, is cleared by the kidneys, and requires clinician-directed monitoring. This record discusses lithium pharmacology; it should not be read as support for unsupervised microdosing or over-the-counter lithium products."
+  };
+
+  var ROUTE_TO_PAGE = {
+    search: "search", top: "search", studies: "studies", "study-library": "studies",
+    pathways: "pathways", "stack-checker": "pathways", atlas: "atlas", "brain-atlas": "atlas",
+    evidence: "evidence", "evidence-grading": "evidence", protocol: "protocol", "protocol-log": "protocol"
+  };
+
+  function setText(id, value) {
+    var element = document.getElementById(id);
+    if (element) element.textContent = value == null ? "" : String(value);
+  }
+
+  function setSourceLink(id, href, visible) {
+    var link = document.getElementById(id);
+    if (!link) return;
+    if (href) link.href = href;
+    link.hidden = !visible;
+  }
+
+  function renderDrugFacts(rows) {
+    currentDrugFacts = rows || [];
+    var factsEl = document.getElementById("drug-facts");
+    if (!factsEl) return;
+    factsEl.innerHTML = currentDrugFacts.map(function (fact) {
+      return '<div class="drug-fact-row"><span>' + escapeHtml(fact.label) + '</span><strong>' + escapeHtml(fact.value) + "</strong></div>";
+    }).join("") || '<p class="drug-facts-empty">No structured facts are available for this record.</p>';
+  }
+
+  function setDrugOverview(text, note) {
+    var overview = document.getElementById("drug-overview");
+    if (!overview) return;
+    overview.innerHTML = '<p>' + escapeHtml(text) + '</p>' +
+      (note ? '<p class="generated-overview-note">' + escapeHtml(note) + "</p>" : "");
+  }
+
+  function setDrugIdentifiers(html) {
+    var element = document.getElementById("drug-page-identifiers");
+    if (element) element.innerHTML = html || "";
+  }
+
+  function resetDrugPage(name, source, subtitle) {
+    detailRequestId += 1;
+    var token = detailRequestId;
+    setText("drug-page-title", name || "Compound detail");
+    setText("drug-page-subtitle", subtitle || "Reference details from the selected catalog record.");
+    setText("drug-page-type", source || "Medication & chemical reference");
+    setText("drug-page-record-source", source || "Reference record");
+    setText("dossier-source-label", source || "Catalog record");
+    setDrugIdentifiers("");
+    var dossierIds = document.getElementById("dossier-ids");
+    var overview = document.getElementById("drug-overview");
+    var body = document.getElementById("dossier-body");
+    var image = document.getElementById("drug-structure-image");
+    var placeholder = document.getElementById("drug-structure-placeholder");
+    var labelGrid = document.getElementById("drug-label-grid");
+    var labelState = document.getElementById("drug-label-state");
+    if (dossierIds) dossierIds.innerHTML = "";
+    if (overview) overview.innerHTML = '<p>Building a source-grounded overview…</p>';
+    if (body) body.innerHTML = '<div class="empty-detail-state"><span class="catalog-spinner" aria-hidden="true"></span><p>Loading reference details…</p></div>';
+    if (image) {
+      image.hidden = true;
+      image.removeAttribute("src");
+      image.alt = "";
+      image.onload = null;
+      image.onerror = null;
+    }
+    if (placeholder) {
+      placeholder.hidden = false;
+      placeholder.textContent = "Loading 2D chemical structure from PubChem when available…";
+    }
+    if (labelGrid) labelGrid.hidden = true;
+    if (labelState) labelState.textContent = "Looking for a matching U.S. FDA drug label…";
+    renderDrugFacts([]);
+    setSourceLink("drug-pubchem-link", "https://pubchem.ncbi.nlm.nih.gov/", false);
+    setSourceLink("drug-rxnorm-link", "https://rxnav.nlm.nih.gov/", false);
+    setSourceLink("drug-dailymed-link", "https://dailymed.nlm.nih.gov/dailymed/", true);
+    return token;
+  }
+
+  function dailyMedSearchUrl(term) {
+    return "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=" + encodeURIComponent(term || "");
+  }
+
+  function setDrugStructureImage(cid, name, requestId) {
+    var image = document.getElementById("drug-structure-image");
+    var placeholder = document.getElementById("drug-structure-placeholder");
+    if (!image || !placeholder) return;
+    if (!cid) {
+      placeholder.hidden = false;
+      placeholder.textContent = "No single-molecule structure is shown for this record.";
+      return;
+    }
+    image.alt = "2D chemical structure for " + name + " from PubChem CID " + cid + ". This is not a pill image.";
+    image.onload = function () {
+      if (requestId !== detailRequestId) return;
+      image.hidden = false;
+      placeholder.hidden = true;
+    };
+    image.onerror = function () {
+      if (requestId !== detailRequestId) return;
+      image.hidden = true;
+      placeholder.hidden = false;
+      placeholder.textContent = "PubChem did not provide a structure image for this record.";
+    };
+    image.src = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + encodeURIComponent(cid) + "/PNG";
+  }
 
   function renderHeroChips() {
     var container = document.getElementById("hero-compound-chips");
@@ -106,78 +224,68 @@
   }
 
   function renderDossier(monographId) {
-    var m = DATA.monographs.find(function (item) {
-      return item.id === monographId;
-    });
-    var idsEl = document.getElementById("dossier-ids");
-    var bodyEl = document.getElementById("dossier-body");
-    var sourceEl = document.getElementById("dossier-source-label");
-    if (!m || !idsEl || !bodyEl) return;
+    var m = DATA.monographs.find(function (item) { return item.id === monographId; });
+    if (!m) return;
 
-    detailRequestId += 1;
-    if (sourceEl) sourceEl.textContent = "Curated dossier";
-    idsEl.innerHTML =
-      '<a href="' + pubchemUrl(m.pubchemCid) + '" target="_blank" rel="noopener noreferrer" title="View on NCBI PubChem">CID:' +
-      escapeHtml(m.pubchemCid) +
-      '</a><span>·</span><a href="' + chemblUrl(m.chemblId) + '" target="_blank" rel="noopener noreferrer" title="View on EBI ChEMBL">' +
-      escapeHtml(m.chemblId) +
-      "</a>";
+    var token = resetDrugPage(m.name, "Curated Pharmapedia monograph", m.classLabel);
+    setText("drug-page-record-source", "Curated reference · local dataset");
+    setText("dossier-source-label", "Curated profile");
+    var cidLink = '<a href="' + pubchemUrl(m.pubchemCid) + '" target="_blank" rel="noopener noreferrer">CID:' + escapeHtml(m.pubchemCid) + '</a>';
+    var chemblLink = '<a href="' + chemblUrl(m.chemblId) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(m.chemblId) + '</a>';
+    var dossierIds = document.getElementById("dossier-ids");
+    if (dossierIds) dossierIds.innerHTML = cidLink + "<span>·</span>" + chemblLink;
+    setDrugIdentifiers(
+      '<span>CAS ' + escapeHtml(m.cas) + '</span>' +
+      '<a href="' + pubchemUrl(m.pubchemCid) + '" target="_blank" rel="noopener noreferrer">PubChem CID ' + escapeHtml(m.pubchemCid) + ' ↗</a>' +
+      '<a href="' + chemblUrl(m.chemblId) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(m.chemblId) + ' ↗</a>'
+    );
+    setSourceLink("drug-pubchem-link", pubchemUrl(m.pubchemCid), true);
+    setSourceLink("drug-rxnorm-link", "https://rxnav.nlm.nih.gov/", false);
+    setSourceLink("drug-dailymed-link", dailyMedSearchUrl(m.name), true);
+    setDrugStructureImage(m.pubchemCid, m.name, token);
+
+    var overview = AI_OVERVIEWS[m.id] || (m.name + " is listed as " + m.classLabel + ". Review the mechanisms, evidence grades, and source links below for the available details.");
+    setDrugOverview(overview, "AI-written summary of this bundled reference record. It is not generated in real time and is not a medical recommendation.");
+    renderDrugFacts([
+      { label: "Chemical class", value: m.classLabel },
+      { label: "Molecular formula", value: m.formula },
+      { label: "Molecular weight", value: m.mw },
+      { label: "Bioavailability", value: m.pk.bioavailability },
+      { label: "Half-life", value: m.pk.halfLife },
+      { label: "BBB / distribution", value: m.pk.bbb },
+      { label: "Clearance", value: m.pk.clearance }
+    ]);
 
     var targetsHtml = m.targets.map(function (t) {
-      return (
-        '<div class="target-row"><div><strong>' +
-        escapeHtml(t.receptor) +
-        '</strong><span class="target-gene">' +
-        escapeHtml(t.gene) +
-        '</span></div><div class="target-affinity">' +
-        escapeHtml(t.metric) + ": " + escapeHtml(t.affinity) +
-        "</div><div>" + gradeBadgeHtml(t.grade) + "</div></div>"
-      );
+      return '<div class="target-row"><div><strong>' + escapeHtml(t.receptor) +
+        '</strong><span class="target-gene">' + escapeHtml(t.gene) +
+        '</span><p class="drug-target-mode">' + escapeHtml(t.mode || "") +
+        '</p></div><div class="target-affinity">' + escapeHtml(t.metric) + ": " + escapeHtml(t.affinity) +
+        '</div><div>' + gradeBadgeHtml(t.grade) + "</div></div>";
     }).join("");
-
     var claimsHtml = m.claims.map(function (c) {
-      return (
-        '<div class="dossier-claim-item"><div class="dossier-claim-top">' +
-        gradeBadgeHtml(c.grade, c.tierLabel) +
+      return '<div class="dossier-claim-item"><div class="dossier-claim-top">' + gradeBadgeHtml(c.grade, c.tierLabel) +
         '<span class="dossier-claim-effect">' + escapeHtml(c.effect) +
         '</span></div><p class="dossier-claim-text">' + escapeHtml(c.claim) +
         '</p><div class="dossier-claim-meta"><span>' + escapeHtml(c.cohort) +
-        '</span><a href="' + pubmedUrl(c.pmid) +
-        '" target="_blank" rel="noopener noreferrer">PMID: ' + escapeHtml(c.pmid) +
-        " ↗</a></div></div>"
-      );
+        '</span><a href="' + pubmedUrl(c.pmid) + '" target="_blank" rel="noopener noreferrer">PMID: ' + escapeHtml(c.pmid) +
+        " ↗</a></div></div>";
     }).join("");
-
-    bodyEl.innerHTML =
-      '<div class="dossier-title-row"><div><h2 class="dossier-compound-name">' +
-      escapeHtml(m.name) +
-      '</h2><p class="dossier-class">' + escapeHtml(m.classLabel) +
-      '</p></div><div class="dossier-chem-meta"><div>CAS ' + escapeHtml(m.cas) +
-      '</div><div>' + escapeHtml(m.mw) +
-      '</div></div></div><div class="pk-mini-grid">' +
-      '<div class="pk-cell"><span class="pk-label">Bioavailability</span><span class="pk-val">' + escapeHtml(m.pk.bioavailability) +
-      '</span></div><div class="pk-cell"><span class="pk-label">Elimination Half-Life</span><span class="pk-val">' + escapeHtml(m.pk.halfLife) +
-      '</span></div><div class="pk-cell"><span class="pk-label">BBB Partitioning</span><span class="pk-val">' + escapeHtml(m.pk.bbb) +
-      '</span></div><div class="pk-cell"><span class="pk-label">Clearance / CYP</span><span class="pk-val">' + escapeHtml(m.pk.clearance) +
-      '</span></div></div><div class="dossier-subhead"><span>Primary Molecular Targets</span><span>Affinity / Grade</span></div>' +
-      '<div class="target-list">' + targetsHtml +
-      '</div><div class="dossier-subhead"><span>Graded Outcome Claims</span><span>PubMed Provenance</span></div>' +
-      '<div class="dossier-claims-list">' + claimsHtml +
-      '</div><div class="dossier-note">' + escapeHtml(m.clinicalNote) + "</div>";
-  }
-
-  function clearCompoundDetails() {
-    detailRequestId += 1;
-    var idsEl = document.getElementById("dossier-ids");
     var bodyEl = document.getElementById("dossier-body");
-    var sourceEl = document.getElementById("dossier-source-label");
-    if (idsEl) idsEl.innerHTML = "";
-    if (sourceEl) sourceEl.textContent = "Record details";
     if (bodyEl) {
       bodyEl.innerHTML =
-        '<div class="empty-detail-state"><span class="empty-detail-mark" aria-hidden="true">⌕</span>' +
-        '<h2>Select a search result</h2><p>Compound identifiers, chemical properties, or curated pharmacology details will appear here.</p></div>';
+        '<div class="dossier-subhead"><span>Pharmacokinetics</span><span>Curated values</span></div><div class="pk-mini-grid">' +
+        '<div class="pk-cell"><span class="pk-label">Bioavailability</span><span class="pk-val">' + escapeHtml(m.pk.bioavailability) +
+        '</span></div><div class="pk-cell"><span class="pk-label">Elimination half-life</span><span class="pk-val">' + escapeHtml(m.pk.halfLife) +
+        '</span></div><div class="pk-cell"><span class="pk-label">BBB partitioning</span><span class="pk-val">' + escapeHtml(m.pk.bbb) +
+        '</span></div><div class="pk-cell"><span class="pk-label">Clearance / CYP</span><span class="pk-val">' + escapeHtml(m.pk.clearance) +
+        '</span></div></div><div class="dossier-subhead"><span>Targets &amp; pathways</span><span>Affinity / evidence</span></div>' +
+        '<div class="target-list">' + targetsHtml +
+        '</div><div class="dossier-subhead"><span>Curated outcome claims</span><span>PubMed provenance</span></div>' +
+        '<div class="dossier-claims-list">' + claimsHtml +
+        '</div><div class="dossier-note">' + escapeHtml(m.clinicalNote) + "</div>";
     }
+    loadOpenFdaLabel(m.name, token);
   }
 
   function renderCatalogResultButton(source, index, id, name, description, sourceLabel) {
@@ -242,7 +350,7 @@
       if (query.length === 1 && !localMatches.length) {
         sections.push('<div class="catalog-empty-state"><p>Type one more character to search the live catalogs.</p></div>');
       } else if (!sections.length) {
-        sections.push('<div class="catalog-empty-state"><h2>Start with a compound or medicine</h2><p>Type at least two characters to search PubChem and RxNorm. Select a result to see identifiers and available reference data.</p></div>');
+        sections.push('<div class="catalog-empty-state"><h2>Start with a compound or medicine</h2><p>Type at least two characters to search PubChem and RxNorm. Open a result for its own reference page, structure image, overview, and available label information.</p></div>');
       }
     } else if (!loading && !sections.length) {
       if (catalogSearch.pubchemError || catalogSearch.rxnormError) {
@@ -347,6 +455,120 @@
     });
   }
 
+  var FDA_SEARCH_ALIASES = {
+    "magnesium l-threonate": "",
+    "cdp-choline": "citicoline",
+    "cdp-choline (citicoline)": "citicoline",
+    "n-acetylcysteine": "acetylcysteine",
+    "n-acetylcysteine (nac)": "acetylcysteine",
+    "lithium (carbonate / microdose context)": "lithium carbonate"
+  };
+
+  function normalizedName(value) {
+    return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  function labelSearchUrl(name) {
+    var raw = normalizedName(name);
+    var monograph = findMonographForName(name);
+    var monographName = monograph ? normalizedName(monograph.name) : "";
+    var term = FDA_SEARCH_ALIASES.hasOwnProperty(raw)
+      ? FDA_SEARCH_ALIASES[raw]
+      : (monograph && FDA_SEARCH_ALIASES.hasOwnProperty(monographName) ? FDA_SEARCH_ALIASES[monographName] : (monograph ? monograph.name : raw));
+    if (!monograph && term) {
+      term = term.replace(/\s+\d+(?:\.\d+)?\s*(?:mcg|µg|mg|g|ml|l|iu|units?|unt|meq|mmol)\b.*$/i, "").trim();
+    }
+    if (!term || term.length < 2) return "";
+    var safeTerm = term.replace(/"/g, " ").replace(/\\/g, " ").replace(/\s+/g, " ").trim();
+    var expression = 'openfda.generic_name:"' + safeTerm + '" OR openfda.brand_name:"' + safeTerm + '"';
+    return "https://api.fda.gov/drug/label.json?search=" + encodeURIComponent(expression) + "&limit=5";
+  }
+
+  function labelValue(record, key) {
+    var values = record && record[key];
+    if (!Array.isArray(values)) values = values ? [values] : [];
+    return values.map(function (value) {
+      return String(value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    }).filter(Boolean).slice(0, 4);
+  }
+
+  function renderLabelField(id, values) {
+    var element = document.getElementById(id);
+    if (!element) return;
+    var text = (values || []).map(function (value) {
+      return String(value).length > 2200 ? String(value).slice(0, 2200) + "… [section excerpt]" : String(value);
+    });
+    element.innerHTML = text.length
+      ? text.map(function (value) { return "<p>" + escapeHtml(value) + "</p>"; }).join("")
+      : '<p class="label-unavailable">Not listed in the matched FDA record.</p>';
+  }
+
+  function loadOpenFdaLabel(name, requestId) {
+    var state = document.getElementById("drug-label-state");
+    var grid = document.getElementById("drug-label-grid");
+    var link = document.getElementById("drug-fda-link");
+    var url = labelSearchUrl(name);
+    if (grid) grid.hidden = true;
+    if (state) state.textContent = url ? "Searching openFDA label records…" : "No U.S. FDA drug-label match is expected for this supplement or substance.";
+    if (link) link.hidden = true;
+    if (!url) return;
+    var controller = typeof window.AbortController === "function" ? new window.AbortController() : null;
+    var timeout = controller ? window.setTimeout(function () { controller.abort(); }, 10000) : null;
+
+    fetchJson(url, controller ? controller.signal : null).then(function (payload) {
+      if (timeout) window.clearTimeout(timeout);
+      if (requestId !== detailRequestId) return;
+      var records = payload && Array.isArray(payload.results) ? payload.results : [];
+      if (!records.length) throw new Error("No FDA label found");
+      var wanted = normalizedName(name);
+      records.sort(function (a, b) {
+        function score(record) {
+          var terms = [].concat(record.openfda && record.openfda.generic_name || [], record.openfda && record.openfda.brand_name || []);
+          return terms.some(function (value) { return normalizedName(value).indexOf(wanted) !== -1 || wanted.indexOf(normalizedName(value)) !== -1; }) ? 1 : 0;
+        }
+        return score(b) - score(a);
+      });
+      var record = records[0];
+      renderLabelField("drug-label-indications", labelValue(record, "indications_and_usage"));
+      renderLabelField("drug-label-adverse", labelValue(record, "adverse_reactions"));
+      renderLabelField("drug-label-warnings", labelValue(record, "boxed_warning").concat(labelValue(record, "warnings_and_cautions")).concat(labelValue(record, "warnings")));
+      renderLabelField("drug-label-contraindications", labelValue(record, "contraindications"));
+      renderLabelField("drug-label-interactions", labelValue(record, "drug_interactions"));
+      if (!findMonographForName(name)) {
+        var overviewParts = ["A matching U.S. FDA label is available for " + name + "."];
+        var overviewIndication = labelValue(record, "indications_and_usage")[0];
+        var overviewAdverse = labelValue(record, "adverse_reactions")[0];
+        if (overviewIndication) overviewParts.push("The label describes use for: " + overviewIndication.slice(0, 620) + (overviewIndication.length > 620 ? "…" : ""));
+        if (overviewAdverse) overviewParts.push("Reported adverse reactions include: " + overviewAdverse.slice(0, 480) + (overviewAdverse.length > 480 ? "…" : ""));
+        setDrugOverview(overviewParts.join(" "), "Excerpt assembled from a matched openFDA label. It is not a live AI response; verify the exact product label and full prescribing information.");
+      }
+      if (grid) grid.hidden = false;
+      var openfda = record.openfda || {};
+      var names = [].concat(openfda.generic_name || [], openfda.brand_name || []).filter(Boolean);
+      var manufacturers = [].concat(openfda.manufacturer_name || []).filter(Boolean);
+      var routes = [].concat(openfda.route || []).filter(Boolean);
+      var applications = [].concat(openfda.application_number || []).filter(Boolean);
+      var labelTitle = names.slice(0, 2).join(" / ") || name;
+      var labelFacts = [];
+      if (manufacturers.length) labelFacts.push({ label: "Label manufacturer", value: manufacturers.slice(0, 2).join(" / ") });
+      if (routes.length) labelFacts.push({ label: "Label route(s)", value: routes.slice(0, 3).join(" / ") });
+      if (applications.length) labelFacts.push({ label: "FDA application", value: applications[0] });
+      if (record.effective_time) labelFacts.push({ label: "Label revision", value: record.effective_time });
+      if (labelFacts.length) renderDrugFacts(currentDrugFacts.concat(labelFacts));
+      var effective = record.effective_time ? " · label updated " + record.effective_time : "";
+      if (state) state.textContent = "Matched U.S. FDA label: " + labelTitle + effective + ". Verify the exact product and current prescribing information.";
+      if (link) {
+        link.href = url;
+        link.hidden = false;
+      }
+    }).catch(function () {
+      if (timeout) window.clearTimeout(timeout);
+      if (requestId !== detailRequestId) return;
+      if (grid) grid.hidden = true;
+      if (state) state.textContent = "No matching U.S. FDA label could be loaded. This may be a supplement, a non-U.S. product, or an unavailable record; try the DailyMed search below.";
+    });
+  }
+
   function updateCatalogStatus(localCount, loading) {
     var status = document.getElementById("hero-search-status");
     if (!status) return;
@@ -419,7 +641,6 @@
     catalogSearch.rxnorm = [];
     catalogSearch.pubchemError = false;
     catalogSearch.rxnormError = false;
-    clearCompoundDetails();
 
     var localMatches = localMonographMatches(cleanQuery.toLowerCase());
     if (!cleanQuery) {
@@ -441,28 +662,52 @@
     }, 280);
   }
 
-  function setDetailHeader(source, linksHtml) {
-    var sourceEl = document.getElementById("dossier-source-label");
-    var idsEl = document.getElementById("dossier-ids");
-    if (sourceEl) sourceEl.textContent = source;
-    if (idsEl) idsEl.innerHTML = linksHtml || "";
+  var MONOGRAPH_PREFIX_ALIASES = {
+    semaglutide: ["ozempic", "wegovy", "rybelsus"],
+    escitalopram: ["lexapro", "cipralex"],
+    metformin: ["glucophage"],
+    "magnesium-threonate": ["magnesium l-threonate", "magtein"],
+    "cdp-choline": ["cdp-choline", "citicoline", "cognizin"],
+    nac: ["n-acetylcysteine", "acetylcysteine"],
+    bupropion: ["wellbutrin", "zyban"],
+    "lithium-lowdose": ["lithium carbonate"]
+  };
+
+  function findMonographForName(name) {
+    var lookup = normalizedName(name);
+    return DATA.monographs.find(function (item) {
+      var primaryName = normalizedName(item.name);
+      if (lookup === primaryName || lookup.indexOf(primaryName + " ") === 0) return true;
+      return (MONOGRAPH_PREFIX_ALIASES[item.id] || []).some(function (alias) {
+        var normalizedAlias = normalizedName(alias);
+        return lookup === normalizedAlias || lookup.indexOf(normalizedAlias + " ") === 0;
+      });
+    });
+  }
+
+  function overviewForName(name) {
+    var monograph = findMonographForName(name);
+    return monograph && AI_OVERVIEWS[monograph.id] ? AI_OVERVIEWS[monograph.id] :
+      "This record identifies a compound or medication term, but the available catalog data is not enough to make a reliable medical overview. Confirm the exact substance and product, and use official labeling and high-quality clinical references for indications, adverse effects, and interactions.";
   }
 
   function showPubChemLoading(item) {
-    detailRequestId += 1;
-    var bodyEl = document.getElementById("dossier-body");
-    setDetailHeader("PubChem compound", "Loading…");
-    if (bodyEl) {
-      bodyEl.innerHTML = '<div class="empty-detail-state"><span class="catalog-spinner" aria-hidden="true"></span><h2>' +
-        escapeHtml(item.name) + '</h2><p>Loading chemical identity and properties from PubChem…</p></div>';
-    }
-    return detailRequestId;
+    var name = item.name || "PubChem compound";
+    var token = resetDrugPage(name, "PubChem chemical record", "Chemical identity and reference data from PubChem.");
+    setText("drug-page-record-source", "PubChem PUG REST · live record");
+    setText("dossier-source-label", "PubChem record");
+    setSourceLink("drug-pubchem-link", "https://pubchem.ncbi.nlm.nih.gov/#query=" + encodeURIComponent(name), true);
+    setSourceLink("drug-rxnorm-link", "https://rxnav.nlm.nih.gov/REST/drugs.json?name=" + encodeURIComponent(name), true);
+    setSourceLink("drug-dailymed-link", dailyMedSearchUrl(name), true);
+    setDrugOverview(overviewForName(name), "This is a fixed, source-grounded summary where a local match exists; it is not generated by a live AI service.");
+    loadOpenFdaLabel(name, token);
+    return token;
   }
 
   function showPubChemError(item, requestId) {
     if (requestId !== detailRequestId) return;
     var bodyEl = document.getElementById("dossier-body");
-    setDetailHeader("PubChem compound", "");
+    setText("drug-page-record-source", "PubChem chemical record");
     if (bodyEl) {
       bodyEl.innerHTML = '<div class="empty-detail-state"><h2>Could not load this record</h2><p>PubChem did not return chemical properties for “' +
         escapeHtml(item.name) +
@@ -477,17 +722,19 @@
     if (!bodyEl) return;
     var cid = property.CID == null ? "" : String(property.CID);
     var name = item.name || property.IUPACName || "PubChem compound";
-    var idsHtml = cid
-      ? '<a href="' + pubchemUrl(cid) + '" target="_blank" rel="noopener noreferrer">CID:' + escapeHtml(cid) + '</a>'
-      : '<span>PubChem record</span>';
-    setDetailHeader("PubChem compound", idsHtml);
+    setText("drug-page-title", name);
+    setText("drug-page-subtitle", "Chemical identity and selected computed properties from PubChem.");
+    setText("drug-page-type", "Chemical compound · PubChem");
+    setText("drug-page-record-source", "PubChem PUG REST · live record");
+    setText("dossier-source-label", "PubChem compound");
+    setDrugIdentifiers(cid ? '<a href="' + pubchemUrl(cid) + '" target="_blank" rel="noopener noreferrer">PubChem CID ' + escapeHtml(cid) + ' ↗</a>' : "");
+    setSourceLink("drug-pubchem-link", cid ? pubchemUrl(cid) : "https://pubchem.ncbi.nlm.nih.gov/#query=" + encodeURIComponent(name), true);
+    setDrugStructureImage(cid, name, requestId);
 
     function field(label, value, suffix) {
-      var text = value == null || value === "" ? "Not listed" : String(value) + (suffix || "");
       return '<div class="pk-cell"><span class="pk-label">' + escapeHtml(label) +
-        '</span><span class="pk-val">' + escapeHtml(text) + "</span></div>";
+        '</span><span class="pk-val">' + escapeHtml(value == null || value === "" ? "Not listed" : String(value) + (suffix || "")) + "</span></div>";
     }
-
     var synonymValues = [];
     if (synonyms && synonyms.InformationList && Array.isArray(synonyms.InformationList.Information)) {
       var record = synonyms.InformationList.Information[0];
@@ -500,7 +747,14 @@
     var iupacHtml = property.IUPACName
       ? '<div class="external-property-block"><span class="pk-label">IUPAC name</span><p>' + escapeHtml(property.IUPACName) + "</p></div>"
       : "";
-
+    renderDrugFacts([
+      { label: "PubChem CID", value: cid || "Not listed" },
+      { label: "Molecular formula", value: property.MolecularFormula || "Not listed" },
+      { label: "Molecular weight", value: property.MolecularWeight ? property.MolecularWeight + " g/mol" : "Not listed" },
+      { label: "XLogP", value: property.XLogP == null ? "Not listed" : property.XLogP },
+      { label: "Topological polar surface area", value: property.TPSA == null ? "Not listed" : property.TPSA + " Å²" },
+      { label: "Hydrogen-bond donors / acceptors", value: String(property.HBondDonorCount == null ? "?" : property.HBondDonorCount) + " / " + String(property.HBondAcceptorCount == null ? "?" : property.HBondAcceptorCount) }
+    ]);
     bodyEl.innerHTML =
       '<div class="dossier-title-row"><div><h2 class="dossier-compound-name">' + escapeHtml(name) +
       '</h2><p class="dossier-class">Chemical identity from PubChem</p></div><div class="dossier-chem-meta">' +
@@ -539,27 +793,124 @@
     });
   }
 
+  function loadPubChemStructure(name, requestId) {
+    var fields = "MolecularFormula,MolecularWeight,IUPACName,XLogP,TPSA,HBondDonorCount,HBondAcceptorCount";
+    var url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + encodeURIComponent(name) + "/property/" + fields + "/JSON";
+    fetchJson(url).then(function (payload) {
+      if (requestId !== detailRequestId) return;
+      var property = payload && payload.PropertyTable && payload.PropertyTable.Properties && payload.PropertyTable.Properties[0];
+      if (!property || !property.CID) return;
+      setDrugStructureImage(property.CID, name, requestId);
+      setSourceLink("drug-pubchem-link", pubchemUrl(property.CID), true);
+      renderDrugFacts(currentDrugFacts.concat([
+        { label: "PubChem CID", value: property.CID },
+        { label: "Molecular formula", value: property.MolecularFormula || "Not listed" },
+        { label: "Molecular weight", value: property.MolecularWeight ? property.MolecularWeight + " g/mol" : "Not listed" },
+        { label: "XLogP", value: property.XLogP == null ? "Not listed" : property.XLogP },
+        { label: "Topological polar surface area", value: property.TPSA == null ? "Not listed" : property.TPSA + " Å²" }
+      ]));
+    }).catch(function () { /* RxNorm records remain usable without a structure image. */ });
+  }
+
   function renderRxNormDetail(item) {
-    detailRequestId += 1;
-    var rxcui = encodeURIComponent(item.rxcui);
-    var apiUrl = "https://rxnav.nlm.nih.gov/REST/rxcui/" + rxcui + "/allProperties.json?prop=all";
-    setDetailHeader(
-      "RxNorm drug term",
-      '<a href="' + apiUrl + '" target="_blank" rel="noopener noreferrer">RxCUI:' + escapeHtml(item.rxcui) + '</a>'
-    );
+    var name = item.name || "RxNorm medication term";
+    var token = resetDrugPage(name, "RxNorm medication record", rxNormTypeLabel(item.tty));
+    setText("drug-page-record-source", "RxNorm · live medication vocabulary");
+    setText("dossier-source-label", "RxNorm medication term");
+    setDrugIdentifiers('<a href="https://rxnav.nlm.nih.gov/REST/rxcui/' + encodeURIComponent(item.rxcui) + '/allProperties.json?prop=all" target="_blank" rel="noopener noreferrer">RxCUI ' + escapeHtml(item.rxcui) + ' ↗</a>');
+    setSourceLink("drug-pubchem-link", "https://pubchem.ncbi.nlm.nih.gov/#query=" + encodeURIComponent(name), true);
+    setSourceLink("drug-rxnorm-link", "https://rxnav.nlm.nih.gov/REST/rxcui/" + encodeURIComponent(item.rxcui) + "/allProperties.json?prop=all", true);
+    setSourceLink("drug-dailymed-link", dailyMedSearchUrl(name), true);
+    setDrugOverview(overviewForName(name), "RxNorm is a normalized drug vocabulary, not a complete product history or medical assessment. This overview is not generated by a live AI service.");
+    renderDrugFacts([
+      { label: "RxCUI", value: item.rxcui || "Not listed" },
+      { label: "Term type", value: rxNormTypeLabel(item.tty) },
+      { label: "Synonym", value: item.synonym || "Not listed" }
+    ]);
     var bodyEl = document.getElementById("dossier-body");
-    if (!bodyEl) return;
-    bodyEl.innerHTML =
-      '<div class="dossier-title-row"><div><h2 class="dossier-compound-name">' + escapeHtml(item.name) +
-      '</h2><p class="dossier-class">Normalized medication term from RxNorm</p></div></div>' +
-      '<div class="pk-mini-grid">' +
-      '<div class="pk-cell"><span class="pk-label">RxCUI</span><span class="pk-val">' + escapeHtml(item.rxcui) +
-      '</span></div><div class="pk-cell"><span class="pk-label">Term type</span><span class="pk-val">' + escapeHtml(rxNormTypeLabel(item.tty)) +
-      '</span></div></div>' +
-      (item.synonym ? '<div class="external-property-block"><span class="pk-label">Synonym</span><p>' + escapeHtml(item.synonym) + "</p></div>" : "") +
-      '<div class="dossier-note">RxNorm normalizes medication names and clinical drug terms, primarily for the U.S. drug vocabulary. It is not a complete historical or worldwide drug list, and this entry alone is not a clinical safety or treatment recommendation.</div>' +
-      '<p class="external-record-link"><a href="' + apiUrl + '" target="_blank" rel="noopener noreferrer">View RxNorm API record ↗</a> · ' +
-      '<a href="https://pubchem.ncbi.nlm.nih.gov/#query=' + encodeURIComponent(item.name) + '" target="_blank" rel="noopener noreferrer">Search chemical identity on PubChem ↗</a></p>';
+    if (bodyEl) {
+      bodyEl.innerHTML =
+        '<div class="dossier-title-row"><div><h2 class="dossier-compound-name">' + escapeHtml(name) +
+        '</h2><p class="dossier-class">Normalized medication term from RxNorm</p></div></div>' +
+        '<div class="pk-mini-grid">' +
+        '<div class="pk-cell"><span class="pk-label">RxCUI</span><span class="pk-val">' + escapeHtml(item.rxcui || "Not listed") +
+        '</span></div><div class="pk-cell"><span class="pk-label">Term type</span><span class="pk-val">' + escapeHtml(rxNormTypeLabel(item.tty)) +
+        '</span></div></div>' +
+        (item.synonym ? '<div class="external-property-block"><span class="pk-label">Synonym</span><p>' + escapeHtml(item.synonym) + "</p></div>" : "") +
+        '<div class="dossier-note">RxNorm normalizes medication names and clinical drug terms, primarily for the U.S. drug vocabulary. It is not a complete historical or worldwide drug list, and this entry alone is not a clinical safety or treatment recommendation.</div>' +
+        '<p class="external-record-link"><a href="https://rxnav.nlm.nih.gov/REST/rxcui/' + encodeURIComponent(item.rxcui) + '/allProperties.json?prop=all" target="_blank" rel="noopener noreferrer">View RxNorm API record ↗</a> · ' +
+        '<a href="https://pubchem.ncbi.nlm.nih.gov/#query=' + encodeURIComponent(name) + '" target="_blank" rel="noopener noreferrer">Search chemical identity on PubChem ↗</a></p>';
+    }
+    loadOpenFdaLabel(name, token);
+    loadPubChemStructure(name, token);
+  }
+
+  function focusDrugHeading() {
+    var heading = document.getElementById("drug-page-title");
+    if (!heading) return;
+    try { heading.focus({ preventScroll: true }); } catch (e) { heading.focus(); }
+  }
+
+  function setPage(pageName) {
+    document.querySelectorAll("[data-page]").forEach(function (page) {
+      page.hidden = page.getAttribute("data-page") !== pageName;
+    });
+    var navPage = pageName === "drug" ? "search" : pageName;
+    document.querySelectorAll("[data-nav-page]").forEach(function (link) {
+      var active = link.getAttribute("data-nav-page") === navPage;
+      link.classList.toggle("is-active", active);
+      if (active) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  function decodeRoutePart(value) {
+    try { return decodeURIComponent(value || ""); } catch (e) { return value || ""; }
+  }
+
+  function routeFromHash() {
+    var route = window.location.hash.slice(1).replace(/^\//, "");
+    var parts = route.split("/");
+    if (parts[0] === "drug") {
+      setPage("drug");
+      var source = decodeRoutePart(parts[1]);
+      if (source === "local") {
+        var localId = decodeRoutePart(parts[2]);
+        if (DATA.monographs.some(function (item) { return item.id === localId; })) {
+          renderDossier(localId);
+          focusDrugHeading();
+        } else setPage("search");
+      } else if (source === "pubchem" && decodeRoutePart(parts[2])) {
+        loadPubChemDetail({ name: decodeRoutePart(parts[2]) });
+        focusDrugHeading();
+      } else if (source === "rxnorm" && decodeRoutePart(parts[2]) && decodeRoutePart(parts[3])) {
+        renderRxNormDetail({
+          rxcui: decodeRoutePart(parts[2]),
+          name: decodeRoutePart(parts[3]),
+          tty: decodeRoutePart(parts[4]),
+          synonym: ""
+        });
+        focusDrugHeading();
+      } else {
+        setPage("search");
+      }
+      return;
+    }
+    setPage(ROUTE_TO_PAGE[route] || "search");
+  }
+
+  function initPageRouter() {
+    window.addEventListener("hashchange", routeFromHash);
+    routeFromHash();
+  }
+
+  function makeDrugRoute(source, item) {
+    if (source === "local") return "#drug/local/" + encodeURIComponent(item.id);
+    if (source === "pubchem") return "#drug/pubchem/" + encodeURIComponent(item.name);
+    return "#drug/rxnorm/" + encodeURIComponent(item.rxcui) + "/" +
+      encodeURIComponent(item.name) + "/" + encodeURIComponent(item.tty || "");
   }
 
   function initCompoundSearch() {
@@ -594,29 +945,23 @@
         if (!monograph) return;
         input.value = monograph.name;
         handleCompoundQuery(monograph.name);
-        renderDossier(monograph.id);
+        window.location.hash = makeDrugRoute("local", monograph);
       });
     }
 
     results.addEventListener("click", function (event) {
       var button = event.target.closest("[data-result-source]");
       if (!button) return;
-      results.querySelectorAll(".catalog-result").forEach(function (resultButton) {
-        resultButton.classList.remove("is-selected");
-        resultButton.setAttribute("aria-pressed", "false");
-      });
-      button.classList.add("is-selected");
-      button.setAttribute("aria-pressed", "true");
-
       var source = button.getAttribute("data-result-source");
       if (source === "local") {
-        renderDossier(button.getAttribute("data-result-id"));
+        var localItem = DATA.monographs.find(function (item) { return item.id === button.getAttribute("data-result-id"); });
+        if (localItem) window.location.hash = makeDrugRoute("local", localItem);
       } else if (source === "pubchem") {
         var pubchemItem = catalogSearch.pubchem[parseInt(button.getAttribute("data-result-index"), 10)];
-        if (pubchemItem) loadPubChemDetail(pubchemItem);
+        if (pubchemItem) window.location.hash = makeDrugRoute("pubchem", pubchemItem);
       } else if (source === "rxnorm") {
         var rxnormItem = catalogSearch.rxnorm[parseInt(button.getAttribute("data-result-index"), 10)];
-        if (rxnormItem) renderRxNormDetail(rxnormItem);
+        if (rxnormItem) window.location.hash = makeDrugRoute("rxnorm", rxnormItem);
       }
     });
   }
@@ -2147,5 +2492,6 @@
     renderEvidenceTiers();
     renderTranslationComparator();
     initProtocolActions();
+    initPageRouter();
   });
 })();
