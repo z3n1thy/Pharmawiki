@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pharmapedia — Open-Source Clinical Research Library, Pathway Map &amp; Stack Checker</title>
+  <title>Pharmapedia — Clinical Compound, Drug, Pathway &amp; Evidence Workbench</title>
   <meta
     name="description"
-    content="Pharmapedia is a 100% free, open-source clinical research library for patients and healthcare professionals. Research compounds, map receptor and CYP pathways, inspect neuroanatomical density, and audit multi-compound stacks with strict 5-tier evidence grading."
+    content="Open-source clinical pharmacology workbench indexing 118M+ chemical compounds and global drugs via PubChem, ChEMBL, OpenFDA, RxNorm, and 5-tier graded PubMed literature."
   />
   <meta name="theme-color" content="#0B0B0D" />
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
@@ -20,29 +20,14 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <a href="#main-content" class="skip-link">Skip to clinical dashboard</a>
+  <a href="#workspace-main" class="skip-link">Skip to compound workbench</a>
 
-  <!-- Top Clinical Provenance & Open-Source Status Strip -->
-  <div class="top-status-strip" role="region" aria-label="Open-source release status">
-    <div class="container top-status-inner">
-      <div class="status-cluster">
-        <span class="violet-brand-tag">MIT Open Source</span>
-        <span><span class="status-dot" aria-hidden="true"></span> Static GitHub Pages Edition · Zero Server · Zero Telemetry</span>
-        <span class="status-sep" aria-hidden="true">|</span>
-        <span class="tabular">Index Release: <strong>v2.4.0</strong> (PubMed · NCBI · PubChem · ChEMBL)</span>
-      </div>
-      <div class="status-cluster">
-        <span>100% Free Public Good</span>
-        <span class="status-sep" aria-hidden="true">·</span>
-        <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">Source &amp; Schema on GitHub →</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Minimal Product-Oriented Navigation Bar -->
-  <header class="site-header">
-    <div class="container nav-bar">
-      <a href="#top" class="brand-lockup" aria-label="Pharmapedia home">
+  <!-- ======================================================================
+       STICKY WORKBENCH COMMAND HEADER + GLOBAL FEDERATED OMNIBOX
+       ====================================================================== -->
+  <header class="workbench-header">
+    <div class="header-top-row">
+      <a href="#compound-workbench" class="brand-lockup" id="brand-reset-link">
         <svg class="brand-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
           <rect width="64" height="64" rx="12" fill="#101115" />
           <rect x="1" y="1" width="62" height="62" rx="11" stroke="#CFC9BC" stroke-opacity="0.32" />
@@ -57,821 +42,576 @@
         </svg>
         <span>
           <span class="brand-wordmark">Pharmapedia</span>
-          <span class="brand-sub">Clinical Data Laboratory</span>
+          <span class="brand-sub">Global Drug &amp; Compound Index</span>
         </span>
       </a>
 
-      <nav class="primary-nav" id="primary-nav" aria-label="Primary sections">
-        <a href="#study-library">Study library</a>
-        <a href="#stack-checker">Pathway map</a>
-        <a href="#stack-checker">Stack checker</a>
-        <a href="#brain-atlas">Brain atlas</a>
-        <a href="#evidence-grading">Evidence grading</a>
-        <a href="#protocol-log">Protocol log</a>
-      </nav>
+      <!-- Global Omnibox Search Across 118M+ Compounds & All FDA/Global Drugs -->
+      <div class="omnibox-wrapper" role="search">
+        <form id="global-search-form" class="omnibox-form" autocomplete="off">
+          <div class="omnibox-input-container">
+            <svg class="omnibox-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8" />
+              <line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+            <input
+              type="search"
+              id="global-omnibox-input"
+              class="clinical-input omnibox-input"
+              placeholder="Search any drug, compound, brand name, peptide, CAS, or CID (118M+ PubChem · ChEMBL · FDA)…"
+              aria-label="Search any compound or drug"
+              aria-autocomplete="list"
+              aria-controls="omnibox-autocomplete"
+            />
+            <span class="omnibox-kbd" aria-hidden="true">/</span>
+          </div>
+          <button type="submit" class="btn btn-primary">Lookup</button>
+          <button type="button" class="btn btn-outline-dark btn-sm" id="random-compound-btn" title="Load a random clinical drug or compound">
+            Random
+          </button>
+        </form>
+        <div class="autocomplete-dropdown" id="omnibox-autocomplete" role="listbox" aria-label="Compound suggestions"></div>
+      </div>
 
-      <div class="nav-actions">
-        <a
-          href="https://github.com/z3n1thy/Pharmawiki"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="nav-github-link"
-        >
-          GitHub Repository
-        </a>
-        <a href="#open-access" class="btn btn-primary btn-sm">Free Lifetime Access</a>
-        <button
-          type="button"
-          class="mobile-menu-toggle"
-          id="mobile-menu-toggle"
-          aria-expanded="false"
-          aria-controls="primary-nav"
-        >
-          Menu
-        </button>
+      <div class="header-meta-right">
+        <span class="db-live-pill">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span>Live Federated Index: PubChem · ChEMBL · OpenFDA · PubMed</span>
+        </span>
+        <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      </div>
+    </div>
+
+    <!-- Workspace View Switcher + Recent Compound History -->
+    <div class="mode-tabs-bar">
+      <div class="mode-tabs-inner">
+        <nav class="mode-tab-list" role="tablist" aria-label="Workbench modules">
+          <button type="button" role="tab" aria-selected="true" class="mode-tab-btn is-active" data-view="explorer">
+            01 · Compound Workbench
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="mode-tab-btn" data-view="stack">
+            02 · Stack &amp; Pathway Checker
+            <span class="tab-count-badge" id="stack-tab-count">4</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="mode-tab-btn" data-view="evidence">
+            03 · PubMed Evidence &amp; Grading
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="mode-tab-btn" data-view="atlas">
+            04 · CNS &amp; Brain Atlas
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="mode-tab-btn" data-view="protocol">
+            05 · Protocol Log
+            <span class="tab-count-badge" id="protocol-tab-count" style="background: var(--btn-secondary-fill); color: #171714;">3</span>
+          </button>
+        </nav>
+
+        <div class="recent-queries-bar" id="recent-queries-bar" aria-label="Recent compounds">
+          <!-- Populated dynamically -->
+        </div>
       </div>
     </div>
   </header>
 
-  <main id="main-content">
+  <!-- ======================================================================
+       MAIN WORKBENCH SHELL
+       ====================================================================== -->
+  <main id="workspace-main" class="workspace-shell">
+
     <!-- ====================================================================
-         HERO SECTION: 66px Manrope Headline + Live Compound Monograph Dossier
+         VIEW 01: COMPOUND WORKBENCH (DEFAULT ACTIVE VIEW)
          ==================================================================== -->
-    <section class="hero-section" id="top">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <div class="eyebrow">
-            <span class="eyebrow-code">LAB // 00</span>
-            <span>For Patients, Clinicians &amp; Independent Researchers</span>
-          </div>
-
-          <h1 class="hero-headline">
-            <span>Research every compound.</span>
-            <span>Map every pathway.</span>
-            <span class="accent-clause">Check every stack.</span>
-          </h1>
-
-          <p class="hero-description">
-            A dark, source-transparent pharmacological reference library built to separate randomized human outcomes from preclinical noise. Cross-reference binding affinities, <strong>CYP450 phenoconversion</strong>, neuroanatomical target density, and multi-compound stack convergence across <strong>PubMed</strong>, <strong>NCBI</strong>, <strong>PubChem</strong>, and <strong>ChEMBL</strong>—100% free, open-source, and accessible directly from GitHub Pages.
-          </p>
-
-          <div class="hero-cta-group">
-            <a href="#open-access" class="btn btn-primary">
-              Get Free Lifetime Access — $0
-            </a>
-            <a href="#stack-checker" class="btn btn-secondary" id="see-in-action-btn">
-              See It in Action
-            </a>
-          </div>
-
-          <div class="hero-sub-links">
-            <a href="#evidence-grading">Inspect 5-tier evidence grading specification →</a>
-            <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">
-              Fork or self-host via GitHub Pages →
-            </a>
-            <span class="hero-trust-note">No account · No subscription · Local-only storage</span>
-          </div>
-
-          <!-- White Input Search Control (#FFFFFF surface, #171714 ink, #CFC9BC border, 12px radius) -->
-          <div class="hero-search-module" role="search" aria-label="Instant compound monograph lookup">
-            <div class="search-module-header">
-              <span>Live Monograph Query (Client-Side Index)</span>
-              <span class="tabular" id="hero-search-status">8 Reference Dossiers Loaded</span>
+    <section id="view-explorer" class="workspace-view is-active" aria-label="Compound research workbench">
+      <div class="explorer-layout">
+        <!-- Left Rail: 267 Instant Clinical Compounds + Global Search Trigger -->
+        <aside class="directory-sidebar" aria-label="Indexed drug and compound directory">
+          <div class="sidebar-head">
+            <div class="sidebar-title-row">
+              <span>Quick Clinical Index</span>
+              <span class="mono-code" id="directory-count-label">267 Core + 118M Live</span>
             </div>
-            <div class="clinical-input-wrap">
-              <svg class="input-icon-left" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8" />
-                <line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
+            <input
+              type="search"
+              id="sidebar-filter-input"
+              class="clinical-input"
+              style="padding: 8px 11px; font-size: 0.82rem;"
+              placeholder="Filter list or type any molecule…"
+              aria-label="Filter sidebar directory or search globally"
+            />
+            <select id="sidebar-category-select" class="clinical-select sidebar-cat-select" aria-label="Filter by therapeutic class">
+              <!-- Populated from catalog.js -->
+            </select>
+          </div>
+          <div class="directory-list" id="directory-list" role="list">
+            <!-- Populated dynamically -->
+          </div>
+        </aside>
+
+        <!-- Right Main Pane: Live Multi-Database Dossier -->
+        <div class="dossier-workspace" id="dossier-workspace" aria-live="polite">
+          <!-- Top Identity Card -->
+          <div class="compound-hero-card">
+            <div class="compound-header-grid">
+              <div style="flex: 1 1 460px;">
+                <div class="compound-Badges-row" id="dossier-badges-row">
+                  <span class="phase-badge">Loading…</span>
+                </div>
+                <h1 class="compound-main-title" id="dossier-name">Semaglutide</h1>
+                <p class="compound-synonyms-line" id="dossier-synonyms">Loading synonyms &amp; pharmacologic classification…</p>
+                <div class="external-id-links" id="dossier-external-links"></div>
+              </div>
+
+              <div class="compound-actions-col">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-primary" id="dossier-add-stack-btn">
+                    + Add to Stack Checker
+                  </button>
+                  <button type="button" class="btn btn-secondary" id="dossier-log-dose-btn">
+                    + Log Regimen
+                  </button>
+                </div>
+                <button type="button" class="btn btn-outline-dark btn-xs" id="dossier-open-stack-view-btn">
+                  Inspect Active Stack Graph →
+                </button>
+              </div>
+            </div>
+
+            <div class="source-telemetry-bar">
+              <span>Live Federated Provenance Status</span>
+              <div class="telemetry-pills" id="dossier-telemetry-pills">
+                <span class="src-pill">PubChem: Idle</span>
+                <span class="src-pill">ChEMBL: Idle</span>
+                <span class="src-pill">OpenFDA: Idle</span>
+                <span class="src-pill">PubMed: Idle</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row A: 2D Chemical Structure + Physicochemical Properties + CNS/BBB MPO Score -->
+          <div class="chem-bbb-grid">
+            <div class="structure-box">
+              <div class="structure-stage" id="structure-stage">
+                <img
+                  id="structure-img"
+                  class="structure-img"
+                  alt="2D chemical structure"
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                />
+                <div id="structure-fallback" style="display:none; text-align:center; padding: 14px; font-size: 0.78rem; color: var(--text-muted);"></div>
+              </div>
+              <div class="structure-foot">
+                <span id="structure-cid-caption" class="mono-code">2D Coordinates</span>
+                <button type="button" class="plate-toggle-btn" id="toggle-plate-btn">Light Plate</button>
+              </div>
+            </div>
+
+            <div class="physchem-matrix" id="physchem-matrix">
+              <!-- Populated dynamically -->
+            </div>
+
+            <div class="bbb-card" id="bbb-card">
+              <!-- Computed CNS MPO & BBB Penetration Card -->
+            </div>
+          </div>
+
+          <!-- Row B: Live 5-Tier Evidence Stratification & Primary PubMed Studies -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h2 class="panel-title">5-Tier Graded Literature Stratification (Live NCBI PubMed Index)</h2>
+              <span class="mono-code" style="font-size: 0.72rem; color: var(--text-muted);" id="pubmed-total-label">
+                Human RCTs ≠ Cohorts ≠ Animal ≠ Cell Studies
+              </span>
+            </div>
+            <div class="panel-body">
+              <div class="evidence-dist-grid" id="dossier-tier-buttons" role="group" aria-label="Filter studies by evidence grade">
+                <!-- Grade A–E count buttons -->
+              </div>
+
+              <form id="dossier-pubmed-subform" class="pubmed-subsearch-row">
+                <div style="flex: 1 1 280px;">
+                  <input
+                    type="search"
+                    id="dossier-pubmed-endpoint-input"
+                    class="clinical-input"
+                    style="padding: 8px 12px; font-size: 0.84rem;"
+                    placeholder="Filter this compound's PubMed studies by condition/endpoint (e.g. mortality, cognition, renal, sleep, CYP2D6)…"
+                    aria-label="Filter compound PubMed studies by endpoint"
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Query PubMed</button>
+                <button type="button" class="btn btn-outline-dark btn-sm" id="dossier-pubmed-reset-btn">Reset Filter</button>
+              </form>
+
+              <div class="pubmed-papers-list" id="dossier-pubmed-list">
+                <!-- Live graded PubMed records -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Row C: Quantitative Human Receptor & Enzyme Targets (ChEMBL + Curated) -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h2 class="panel-title">Verified Mechanisms &amp; Human Target Bioactivity (Ki / IC50 / EC50 / Kd)</h2>
+              <span class="mono-code" style="font-size: 0.72rem; color: var(--text-muted);" id="targets-count-label">EBI ChEMBL + IUPHAR</span>
+            </div>
+            <div class="panel-body" id="dossier-targets-body">
+              <!-- Target mechanisms & nanomolar binding assays -->
+            </div>
+          </div>
+
+          <!-- Row D: Clinical Pharmacology, ADME / CYP450, Boxed Warnings & Drug Interactions -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h2 class="panel-title">Clinical Pharmacology, Pharmacokinetics (ADME) &amp; Drug Interactions</h2>
+              <span class="mono-code" style="font-size: 0.72rem; color: var(--text-muted);">OpenFDA SPL · DailyMed · PubChem PUG-View</span>
+            </div>
+            <div class="panel-body" id="dossier-clinical-body">
+              <!-- Boxed warning + 4 clinical sections -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 02: UNIVERSAL STACK & PATHWAY INTERACTION CHECKER
+         ==================================================================== -->
+    <section id="view-stack" class="workspace-view" aria-label="Multi-compound stack and pathway checker">
+      <div class="stack-top-controls">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Add Any Drug or Compound to Active Stack</h2>
+            <span class="mono-code" style="font-size: 0.7rem; color: var(--text-muted);">CYP450 · Transporters · Receptor Convergence · FDA Labels</span>
+          </div>
+          <div class="panel-body">
+            <form id="stack-add-drug-form" style="display: flex; gap: 8px; position: relative;" autocomplete="off">
               <input
                 type="search"
-                id="hero-compound-input"
-                class="clinical-input clinical-input-has-icon"
-                placeholder="Search compound, target gene, CYP enzyme, or PMID (e.g. Semaglutide, CYP2D6, SLC6A4, 37952131)…"
-                autocomplete="off"
-                aria-label="Search compound monograph"
+                id="stack-drug-search-input"
+                class="clinical-input"
+                placeholder="Type any Rx drug, supplement, botanical, or compound (e.g. Warfarin, Fluconazole, Ibuprofen, Sildenafil)…"
+                aria-label="Add drug or compound to stack"
               />
-            </div>
-            <div class="compound-chip-row" id="hero-compound-chips" aria-label="Sample compounds">
-              <!-- Populated by app.js -->
+              <button type="submit" class="btn btn-primary">+ Add</button>
+              <div class="autocomplete-dropdown" id="stack-autocomplete"></div>
+            </form>
+
+            <div class="stack-active-pills" id="stack-active-pills">
+              <!-- Active compounds in stack -->
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Live Structured Compound Dossier -->
-        <aside class="dossier-card" aria-live="polite" aria-label="Selected compound monograph snapshot">
-          <div class="dossier-topbar">
-            <span>Module 01 // Compound Monograph</span>
-            <div class="dossier-topbar-ids" id="dossier-ids">
-              <!-- CID & ChEMBL -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Reference Clinical Interaction Presets</h2>
+            <button type="button" class="btn btn-outline-dark btn-xs" id="sync-stack-to-protocol-btn">
+              Sync Stack to Protocol Log →
+            </button>
+          </div>
+          <div class="panel-body">
+            <div class="stack-presets-row" id="universal-stack-presets">
+              <!-- Preset buttons -->
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 0.78rem; color: var(--text-muted);" id="stack-preset-caption">
+              Add any global medication or compound on the left, or load a preset audit above. Live OpenFDA interaction labels and CYP/receptor pathways are evaluated automatically.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack-lab-grid">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Tri-Partite Pharmacology Graph · Compound → Molecular / CYP Node → Risk Axis</h2>
+            <div style="display:flex; gap:12px; font-size:0.7rem; color:var(--text-muted);">
+              <span><strong style="color:var(--accent-coral);">■</strong> Inhibition / Induction / Alert</span>
+              <span><strong style="color:var(--action-blue);">■</strong> Substrate / Modulation</span>
             </div>
           </div>
-          <div class="dossier-body" id="dossier-body">
-            <!-- Populated dynamically by app.js -->
+          <div class="svg-viewport-wrap">
+            <svg
+              id="pathway-svg"
+              class="pathway-svg"
+              viewBox="0 0 840 480"
+              role="img"
+              aria-label="Interactive compound to pathway and physiological risk axis graph"
+            ></svg>
+          </div>
+          <div class="edge-inspector-bar" id="edge-inspector-bar" aria-live="polite"></div>
+        </div>
+
+        <aside class="panel-card" aria-live="polite">
+          <div class="panel-header">
+            <h2 class="panel-title">Stack Risk Signal &amp; FDA Cross-Label Audit</h2>
+            <span class="mono-code" style="font-size: 0.7rem; color: var(--text-muted);" id="stack-status-meta">Live Engine</span>
+          </div>
+          <div class="panel-body">
+            <div class="risk-overall-banner" id="risk-overall-banner">
+              <div>
+                <span style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); display:block;">Composite Stack Signal</span>
+                <strong style="font-size:1.05rem;" id="risk-overall-title">Evaluating…</strong>
+              </div>
+              <span class="grade-pill grade-A" id="risk-edge-count">0 Nodes</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--stone-solid); margin-bottom:8px;">
+              <span>Axis Severity Breakdown</span>
+              <span>0–100 Index</span>
+            </div>
+            <div class="axis-breakdown-list" id="axis-breakdown-list"></div>
+
+            <div style="display:flex; justify-content:space-between; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--stone-solid); margin-bottom:8px;">
+              <span>Detected Convergence &amp; Label Warnings</span>
+              <span id="findings-count-label">0 Flags</span>
+            </div>
+            <div class="findings-stack" id="stack-findings-list"></div>
           </div>
         </aside>
       </div>
     </section>
 
     <!-- ====================================================================
-         BIG STATS & SOURCE PROVENANCE TELEMETRY BAND
+         VIEW 03: PUBMED EVIDENCE EXPLORER & 5-TIER GRADING SPECIFICATION
          ==================================================================== -->
-    <section class="stats-band" aria-label="Indexed biomedical dataset metrics">
-      <div class="container">
-        <div class="stats-grid">
-          <div class="stat-cell">
-            <span class="stat-kicker">01 / Chemical Entities</span>
-            <span class="stat-number tabular">4,820</span>
-            <span class="stat-label">Compounds &amp; Active Metabolites</span>
-            <span class="stat-source">PubChem · ChEMBL v34 · RxNorm</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">02 / Primary Literature</span>
-            <span class="stat-number tabular">142,680</span>
-            <span class="stat-label">Graded Clinical &amp; Preclinical Studies</span>
-            <span class="stat-source">PubMed · MEDLINE · ClinicalTrials.gov</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">03 / Signaling Topology</span>
-            <span class="stat-number tabular">1,194</span>
-            <span class="stat-label">Receptor, Enzyme &amp; Transporter Maps</span>
-            <span class="stat-source">IUPHAR/BPS · Reactome · NCBI Gene</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">04 / Interaction Edges</span>
-            <span class="stat-number tabular">38,410</span>
-            <span class="stat-label">Quantified PK / CYP / PD Linkages</span>
-            <span class="stat-source">FDA DDI Index · CPIC Guidelines</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">05 / Access Model</span>
-            <span class="stat-number tabular">$0 · MIT</span>
-            <span class="stat-label">100% Free &amp; Open-Source Forever</span>
-            <span class="stat-source">Static GitHub Pages · Offline Ready</span>
-          </div>
+    <section id="view-evidence" class="workspace-view" aria-label="PubMed evidence explorer and 5-tier grading framework">
+      <!-- Live Custom PubMed Evidence Stratifier -->
+      <div class="panel-card" style="margin-bottom: 18px;">
+        <div class="panel-header">
+          <h2 class="panel-title">Global PubMed Evidence Stratifier (37M+ Biomedical Papers Classified by Study Tier)</h2>
+          <span class="mono-code" style="font-size:0.72rem; color:var(--text-muted);">NCBI E-Utilities Live</span>
         </div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         STUDY LIBRARY: EVIDENCE-BACKED CLAIMS LEDGER
-         ==================================================================== -->
-    <section class="section-block" id="study-library">
-      <div class="container">
-        <div class="section-header-row">
-          <div>
-            <div class="eyebrow">
-              <span class="eyebrow-code">MODULE // 02</span>
-              <span>Study Library &amp; Quantified Outcome Ledger</span>
-            </div>
-            <h2 class="section-heading">Every claim quantified, graded, and traced to primary data.</h2>
-          </div>
-          <p class="section-lead">
-            Marketing pages summarize compounds with vague adjectives. Pharmapedia records exact effect sizes, confidence intervals, sample sizes, null Phase III trials, and allometric animal-to-human dose gaps—linked directly to verifiable PubMed records. Click any study row to inspect its methodological audit.
-          </p>
-        </div>
-
-        <div class="ledger-sub-filters">
-          <div class="filter-pill-group" id="domain-filters" role="group" aria-label="Filter claims by clinical domain">
-            <button type="button" class="filter-btn is-active" data-domain="all">All Domains (12)</button>
-            <button type="button" class="filter-btn" data-domain="cardiometabolic">Cardiometabolic</button>
-            <button type="button" class="filter-btn" data-domain="neuropsychiatry">Neuropsychiatry</button>
-            <button type="button" class="filter-btn" data-domain="neuroprotection">Neuroprotection &amp; Sleep</button>
-            <button type="button" class="filter-btn" data-domain="analgesia">Analgesia &amp; PK Safety</button>
-          </div>
-
-          <div class="ledger-search-box">
+        <div class="panel-body">
+          <form id="global-pubmed-form" style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 10px; margin-bottom: 14px;">
             <input
               type="search"
-              id="ledger-filter-input"
+              id="ev-compound-input"
               class="clinical-input"
-              placeholder="Filter claims by compound, grade (A–E), or PMID…"
-              aria-label="Filter study claims table"
+              placeholder="Compound or drug (e.g. Rapamycin, Creatine, Lithium, Atorvastatin)…"
+              required
             />
+            <input
+              type="search"
+              id="ev-outcome-input"
+              class="clinical-input"
+              placeholder="Optional outcome / disease (e.g. Alzheimer, lifespan, arrhythmia, depression)…"
+            />
+            <select id="ev-tier-select" class="clinical-select" aria-label="Restrict to evidence tier">
+              <option value="all">All Evidence Tiers</option>
+              <option value="A">Grade A · Human RCTs &amp; Meta-Analyses Only</option>
+              <option value="B">Grade B · Human Observational / Cohorts Only</option>
+              <option value="C">Grade C · Animal In Vivo Only</option>
+              <option value="D">Grade D · Cell / In Vitro Only</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Search PubMed</button>
+          </form>
+          <div id="global-pubmed-results" class="pubmed-papers-list"></div>
+        </div>
+      </div>
+
+      <!-- 5-Tier Epistemic Ceilings -->
+      <div class="tier-architecture-grid" id="tier-cards-grid"></div>
+
+      <!-- Same-Compound Translation Gap Comparator -->
+      <div class="panel-card" style="margin-bottom: 18px;">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Translation Gap Audit · Same Compound Evaluated Separately Across Grades A–E</h2>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;" id="comparator-case-tabs"></div>
+        </div>
+        <div style="padding: 14px 18px; border-bottom: 1px solid var(--stone-line); background: var(--bg-canvas);">
+          <strong id="comparator-case-title" style="display:block; font-size:1.05rem; margin-bottom:4px;"></strong>
+          <span id="comparator-case-summary" style="font-size:0.84rem; color:var(--text-secondary);"></span>
+        </div>
+        <div id="comparator-rows"></div>
+      </div>
+
+      <!-- Curated Methodological Audit Table -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2 class="panel-title">Reference Methodological Audits (Click Any Row for Exposure &amp; Allometric HED Breakdown)</h2>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;" id="grade-filters">
+            <button type="button" class="filter-btn is-active" data-grade="all">All</button>
+            <button type="button" class="filter-btn" data-grade="A">Grade A</button>
+            <button type="button" class="filter-btn" data-grade="B">Grade B</button>
+            <button type="button" class="filter-btn" data-grade="C">Grade C</button>
+            <button type="button" class="filter-btn" data-grade="D">Grade D</button>
+            <button type="button" class="filter-btn" data-grade="E">Grade E</button>
           </div>
         </div>
-
-        <div class="filter-pill-group" id="grade-filters" role="group" aria-label="Filter claims by evidence tier" style="margin-bottom: 16px;">
-          <button type="button" class="filter-btn is-active" data-grade="all">All Evidence Tiers</button>
-          <button type="button" class="filter-btn" data-grade="A">Grade A · Human RCT / PK</button>
-          <button type="button" class="filter-btn" data-grade="B">Grade B · Observational</button>
-          <button type="button" class="filter-btn" data-grade="C">Grade C · Animal In Vivo</button>
-          <button type="button" class="filter-btn" data-grade="D">Grade D · Cell Assay</button>
-          <button type="button" class="filter-btn" data-grade="E">Grade E · In Silico</button>
-        </div>
-
-        <div class="table-frame">
-          <table class="evidence-table" aria-label="Graded biomedical claims ledger">
+        <div class="data-table-wrap" style="border:none;">
+          <table class="clinical-table">
             <thead>
               <tr>
                 <th>Compound &amp; Regimen</th>
-                <th>Outcome / Evaluated Claim</th>
-                <th>Evidence Tier</th>
-                <th>Study Design &amp; Cohort</th>
+                <th>Evaluated Claim</th>
+                <th>Tier</th>
+                <th>Model &amp; Sample</th>
                 <th>Quantified Effect</th>
-                <th>Provenance</th>
+                <th>PubMed</th>
               </tr>
             </thead>
-            <tbody id="study-ledger-tbody">
-              <!-- Populated by app.js -->
-            </tbody>
+            <tbody id="study-ledger-tbody"></tbody>
           </table>
         </div>
       </div>
     </section>
 
     <!-- ====================================================================
-         PATHWAY MAP & INTERACTIVE STACK CHECKER VISUALIZATION
+         VIEW 04: NEUROANATOMICAL BRAIN ATLAS & CNS BBB INSPECTOR
          ==================================================================== -->
-    <section class="section-block" id="stack-checker">
-      <div class="container" id="pathway-map">
-        <div class="section-header-row">
-          <div>
-            <div class="eyebrow">
-              <span class="eyebrow-code">MODULE // 03</span>
-              <span>Pathway Graph &amp; Multi-Compound Stack Checker</span>
-            </div>
-            <h2 class="section-heading">Map pathway convergence before compounds collide.</h2>
+    <section id="view-atlas" class="workspace-view" aria-label="Neuroanatomical brain atlas">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;" id="atlas-system-tabs" role="tablist"></div>
+
+      <div class="atlas-grid">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Sagittal Midline &amp; Subcortical Stereotactic Projection (MNI152)</h2>
+            <span class="mono-code" id="atlas-active-genes" style="font-size:0.74rem; color:var(--accent-coral);">HTR1A · HTR2A · SLC6A4</span>
           </div>
-          <p class="section-lead">
-            Pairwise drug checkers miss cumulative pathway load—such as two prescriptions and a botanical converging simultaneously on <strong>SERT</strong> while inhibiting <strong>CYP2D6</strong> prodrug activation. Select a clinical preset or toggle individual agents below to compute shared targets and axis risk signals in real time.
-          </p>
+          <div style="background: var(--bg-canvas); padding: 14px;">
+            <svg
+              id="brain-atlas-svg"
+              class="brain-atlas-svg"
+              viewBox="0 0 660 350"
+              role="img"
+              aria-label="Interactive human sagittal brain atlas"
+            >
+              <g stroke="#CFC9BC" stroke-opacity="0.07" stroke-width="1">
+                <line x1="80" y1="20" x2="80" y2="332" />
+                <line x1="170" y1="20" x2="170" y2="332" />
+                <line x1="260" y1="20" x2="260" y2="332" />
+                <line x1="350" y1="20" x2="350" y2="332" />
+                <line x1="440" y1="20" x2="440" y2="332" />
+                <line x1="530" y1="20" x2="530" y2="332" />
+                <line x1="20" y1="65" x2="640" y2="65" />
+                <line x1="20" y1="135" x2="640" y2="135" />
+                <line x1="20" y1="205" x2="640" y2="205" />
+                <line x1="20" y1="275" x2="640" y2="275" />
+              </g>
+              <g stroke="#CFC9BC" stroke-opacity="0.20" stroke-dasharray="4 4" stroke-width="1">
+                <line x1="145" y1="190" x2="520" y2="190" />
+                <line x1="332" y1="30" x2="332" y2="326" />
+              </g>
+              <text x="152" y="34" fill="#8C938D" font-size="9" font-family="monospace">ANTERIOR (+Y)</text>
+              <text x="444" y="34" fill="#8C938D" font-size="9" font-family="monospace">POSTERIOR (-Y)</text>
+              <text x="338" y="34" fill="#8C938D" font-size="9" font-family="monospace">DORSAL (+Z)</text>
+
+              <g transform="translate(60, 0)">
+                <path
+                  d="M 106,204 C 92,182 94,142 114,108 C 136,71 182,46 244,40 C 314,34 382,52 424,94 C 456,126 468,168 454,204 C 442,232 414,242 384,240 C 356,238 338,224 316,222 C 286,220 264,240 232,242 C 198,244 178,226 154,224 C 128,222 116,218 106,204 Z"
+                  fill="#12141A" stroke="#CFC9BC" stroke-opacity="0.52" stroke-width="1.8"
+                />
+                <path
+                  d="M 132,166 C 154,132 198,104 262,98 C 324,92 374,112 406,148"
+                  fill="none" stroke="#CFC9BC" stroke-opacity="0.22" stroke-width="1.2"
+                />
+                <path
+                  d="M 168,78 C 182,98 190,114 186,134 M 248,54 C 254,78 258,96 252,116 M 332,62 C 324,86 322,106 330,126 M 398,98 C 382,118 376,138 386,158"
+                  fill="none" stroke="#CFC9BC" stroke-opacity="0.18" stroke-width="1.1"
+                />
+                <path
+                  d="M 188,176 C 182,150 212,130 266,128 C 316,126 354,142 362,168 C 365,178 352,186 340,180 C 326,172 304,152 266,152 C 228,152 212,164 206,180 C 202,188 191,186 188,176 Z"
+                  fill="#191D26" stroke="#CFC9BC" stroke-opacity="0.48" stroke-width="1.4"
+                />
+                <ellipse cx="292" cy="178" rx="36" ry="21" fill="#151821" stroke="#CFC9BC" stroke-opacity="0.34" stroke-width="1.2" />
+                <path
+                  d="M 358,242 C 386,232 428,238 444,262 C 456,282 444,308 416,316 C 386,324 356,310 348,286 C 344,270 346,250 358,242 Z"
+                  fill="#12141A" stroke="#CFC9BC" stroke-opacity="0.46" stroke-width="1.6"
+                />
+                <path d="M 366,276 L 426,268 M 394,250 L 398,304 M 374,258 L 418,294" stroke="#CFC9BC" stroke-opacity="0.20" stroke-width="1.1" />
+                <path
+                  d="M 284,202 C 280,224 282,248 296,268 C 308,286 318,308 324,332 L 354,332 C 348,304 344,278 342,252 C 340,228 328,210 312,202 Z"
+                  fill="#14171F" stroke="#CFC9BC" stroke-opacity="0.46" stroke-width="1.5"
+                />
+              </g>
+              <g id="atlas-pins-layer"></g>
+            </svg>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; padding:12px 16px; border-top:1px solid var(--stone-line);" id="atlas-region-buttons"></div>
         </div>
 
-        <!-- Preset Clinical Scenarios -->
-        <div class="preset-bar" id="stack-presets" role="group" aria-label="Preset clinical stacks">
-          <!-- Populated by app.js -->
-        </div>
-
-        <!-- Interactive Compound Regimen Toggles -->
-        <div class="regimen-builder-panel">
-          <div class="regimen-builder-head">
-            <span class="regimen-builder-title">Active Stack Regimen (Click compounds to add or remove from pathway graph)</span>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <span class="tabular" id="active-stack-counter" style="font-size: 0.8rem; color: var(--text-muted);">4 active agents</span>
-              <button type="button" class="btn btn-outline-dark btn-sm" id="send-stack-to-log-btn">
-                Copy Active Stack to Protocol Log ↓
-              </button>
-            </div>
+        <aside class="panel-card" aria-live="polite">
+          <div class="panel-header">
+            <h2 class="panel-title">Regional Neuropharmacology Readout</h2>
+            <span class="mono-code" id="atlas-mni-coord" style="font-size:0.75rem; color:var(--stone-solid);">MNI [-26, -20, -14]</span>
           </div>
-          <div class="stack-toggle-grid" id="stack-compound-toggles">
-            <!-- Populated by app.js -->
-          </div>
-        </div>
-
-        <!-- Split Workspace: Interactive SVG Pathway Map + Risk Signal Summary -->
-        <div class="stack-lab-grid">
-          <div class="pathway-canvas-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Tri-Partite Pharmacology Graph · Compound → Molecular Target → Physiological Axis</span>
-              <div class="graph-legend">
-                <span class="legend-item"><span class="legend-swatch swatch-coral"></span>Inhibition / Induction Alert</span>
-                <span class="legend-item"><span class="legend-swatch swatch-blue"></span>Agonism / Modulation</span>
-                <span class="legend-item"><span class="legend-swatch swatch-dashed"></span>Preclinical / In Vitro Edge</span>
-              </div>
-            </div>
-
-            <div class="svg-viewport-wrap">
-              <svg
-                id="pathway-svg"
-                class="pathway-svg"
-                viewBox="0 0 820 490"
-                role="img"
-                aria-label="Interactive compound to receptor pathway and clinical axis network diagram"
-              >
-                <!-- Populated dynamically by app.js -->
-              </svg>
-            </div>
-
-            <div class="edge-inspector-bar" id="edge-inspector-bar" aria-live="polite">
-              <!-- Selected node/edge detail populated by app.js -->
-            </div>
-          </div>
-
-          <!-- Risk Signal Summary Module -->
-          <aside class="risk-summary-card" aria-live="polite">
-            <div class="module-bar">
-              <span class="module-bar-title">Risk Signal Summary &amp; Axis Load</span>
-              <span class="mono-code" style="font-size: 0.72rem; color: var(--text-muted);">PK + PD Audit</span>
-            </div>
-            <div class="risk-body">
-              <div class="risk-overall-banner" id="risk-overall-banner">
-                <div>
-                  <span class="risk-status-label">Composite Stack Signal</span>
-                  <span class="risk-status-value" id="risk-overall-title">Evaluating…</span>
-                </div>
-                <span class="grade-pill grade-A" id="risk-edge-count">0 Edges</span>
-              </div>
-
-              <div class="dossier-subhead">
-                <span>Severity Bands by Axis</span>
-                <span>0–100 Index</span>
-              </div>
-              <div class="axis-breakdown-list" id="axis-breakdown-list">
-                <!-- Populated by app.js -->
-              </div>
-
-              <div class="dossier-subhead">
-                <span>Detected Convergence Signals</span>
-                <span id="findings-count-label">0 Flags</span>
-              </div>
-              <div class="findings-stack" id="stack-findings-list">
-                <!-- Populated by app.js -->
-              </div>
-            </div>
-          </aside>
-        </div>
+          <div class="panel-body" id="atlas-inspector-body"></div>
+        </aside>
       </div>
     </section>
 
     <!-- ====================================================================
-         BRAIN ATLAS TEASER: NEUROANATOMICAL RECEPTOR & BBB DENSITY
+         VIEW 05: PRIVATE LOCAL-ONLY PROTOCOL LOG
          ==================================================================== -->
-    <section class="section-block" id="brain-atlas">
-      <div class="container">
-        <div class="section-header-row">
-          <div>
-            <div class="eyebrow">
-              <span class="eyebrow-code">MODULE // 04</span>
-              <span>Neuroanatomical Brain Atlas Teaser</span>
-            </div>
-            <h2 class="section-heading">Trace receptor density across neuroanatomical regions.</h2>
+    <section id="view-protocol" class="workspace-view" aria-label="Local protocol and regimen log">
+      <div class="protocol-split">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Local Regimen &amp; Washout Log (Stored Strictly in Browser Memory)</h2>
+            <span class="mono-code" style="font-size:0.72rem; color:var(--signal-ok);">0 Server Transmission</span>
           </div>
-          <p class="section-lead">
-            In vitro receptor binding means nothing for central nervous system outcomes if a molecule cannot cross the blood-brain barrier (<em>K</em><sub>p,uu,brain</sub>) or reach regions expressing its target transcript. Explore regional human mRNA expression (<strong>Allen Human Brain Atlas</strong> z-scores) paired with human PET occupancy data.
-          </p>
-        </div>
+          <div class="panel-body">
+            <form id="protocol-add-form" class="protocol-form-row">
+              <input type="text" id="protocol-name-input" class="clinical-input" placeholder="Compound or drug name…" required />
+              <input type="text" id="protocol-dose-input" class="clinical-input" placeholder="Dose (e.g. 20 mg)" required />
+              <select id="protocol-schedule-select" class="clinical-select" aria-label="Schedule">
+                <option value="AM Fasting">AM Fasting</option>
+                <option value="AM With Meal">AM With Meal</option>
+                <option value="BID (2x/day)">BID (2x/day)</option>
+                <option value="PM Dinner">PM Dinner</option>
+                <option value="HS Bedtime">HS Bedtime</option>
+                <option value="Weekly">Weekly</option>
+                <option value="PRN">PRN</option>
+              </select>
+              <button type="submit" class="btn btn-primary">+ Log</button>
+            </form>
 
-        <div class="atlas-system-tabs" id="atlas-system-tabs" role="tablist" aria-label="Select neurotransmitter receptor overlay">
-          <!-- Populated by app.js -->
-        </div>
+            <div id="protocol-log-list"></div>
 
-        <div class="atlas-grid">
-          <div class="atlas-Stage-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Sagittal Midline &amp; Subcortical Projection · Stereotactic MNI152 Space</span>
-              <span class="mono-code" id="atlas-active-genes" style="font-size: 0.74rem; color: var(--accent-coral);">HTR1A · HTR2A · SLC6A4</span>
-            </div>
-
-            <div class="atlas-svg-container">
-              <svg
-                id="brain-atlas-svg"
-                class="brain-atlas-svg"
-                viewBox="0 0 660 350"
-                role="img"
-                aria-label="Interactive human sagittal brain atlas showing cortical and subcortical receptor expression density"
-              >
-                <!-- Stereotactic Coordinate Grid -->
-                <g stroke="#CFC9BC" stroke-opacity="0.07" stroke-width="1">
-                  <line x1="80" y1="20" x2="80" y2="332" />
-                  <line x1="170" y1="20" x2="170" y2="332" />
-                  <line x1="260" y1="20" x2="260" y2="332" />
-                  <line x1="350" y1="20" x2="350" y2="332" />
-                  <line x1="440" y1="20" x2="440" y2="332" />
-                  <line x1="530" y1="20" x2="530" y2="332" />
-                  <line x1="20" y1="65" x2="640" y2="65" />
-                  <line x1="20" y1="135" x2="640" y2="135" />
-                  <line x1="20" y1="205" x2="640" y2="205" />
-                  <line x1="20" y1="275" x2="640" y2="275" />
-                </g>
-
-                <!-- AC-PC Stereotactic Reference Crosshair -->
-                <g stroke="#CFC9BC" stroke-opacity="0.20" stroke-dasharray="4 4" stroke-width="1">
-                  <line x1="145" y1="190" x2="520" y2="190" />
-                  <line x1="332" y1="30" x2="332" y2="326" />
-                </g>
-                <text x="152" y="34" fill="#8C938D" font-size="9" font-family="monospace">ANTERIOR (+Y)</text>
-                <text x="444" y="34" fill="#8C938D" font-size="9" font-family="monospace">POSTERIOR (-Y)</text>
-                <text x="338" y="34" fill="#8C938D" font-size="9" font-family="monospace">DORSAL (+Z)</text>
-
-                <!-- Sagittal Midline Anatomical Contours (Centered +60px) -->
-                <g transform="translate(60, 0)">
-                  <!-- Outer Cerebral Cortex Sagittal Silhouette -->
-                  <path
-                    d="M 106,204
-                       C 92,182 94,142 114,108
-                       C 136,71 182,46 244,40
-                       C 314,34 382,52 424,94
-                       C 456,126 468,168 454,204
-                       C 442,232 414,242 384,240
-                       C 356,238 338,224 316,222
-                       C 286,220 264,240 232,242
-                       C 198,244 178,226 154,224
-                       C 128,222 116,218 106,204 Z"
-                    fill="#12141A"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.52"
-                    stroke-width="1.8"
-                  />
-
-                  <!-- Cortical Sulci / Cingulate Sulcus Architectural Lines -->
-                  <path
-                    d="M 132,166 C 154,132 198,104 262,98 C 324,92 374,112 406,148"
-                    fill="none"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.22"
-                    stroke-width="1.2"
-                  />
-                  <path
-                    d="M 168,78 C 182,98 190,114 186,134 M 248,54 C 254,78 258,96 252,116 M 332,62 C 324,86 322,106 330,126 M 398,98 C 382,118 376,138 386,158"
-                    fill="none"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.18"
-                    stroke-width="1.1"
-                  />
-
-                  <!-- Corpus Callosum (Genu, Body, Splenium) -->
-                  <path
-                    d="M 188,176
-                       C 182,150 212,130 266,128
-                       C 316,126 354,142 362,168
-                       C 365,178 352,186 340,180
-                       C 326,172 304,152 266,152
-                       C 228,152 212,164 206,180
-                       C 202,188 191,186 188,176 Z"
-                    fill="#191D26"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.48"
-                    stroke-width="1.4"
-                  />
-
-                  <!-- Subcortical Thalamus / Striatal Capsule Contour -->
-                  <ellipse
-                    cx="292"
-                    cy="178"
-                    rx="36"
-                    ry="21"
-                    fill="#151821"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.34"
-                    stroke-width="1.2"
-                  />
-
-                  <!-- Cerebellum Arbor Vitae Schematic -->
-                  <path
-                    d="M 358,242
-                       C 386,232 428,238 444,262
-                       C 456,282 444,308 416,316
-                       C 386,324 356,310 348,286
-                       C 344,270 346,250 358,242 Z"
-                    fill="#12141A"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.46"
-                    stroke-width="1.6"
-                  />
-                  <path
-                    d="M 366,276 L 426,268 M 394,250 L 398,304 M 374,258 L 418,294"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.20"
-                    stroke-width="1.1"
-                  />
-
-                  <!-- Pons, Midbrain & Medulla Brainstem -->
-                  <path
-                    d="M 284,202
-                       C 280,224 282,248 296,268
-                       C 308,286 318,308 324,332
-                       L 354,332
-                       C 348,304 344,278 342,252
-                       C 340,228 328,210 312,202 Z"
-                    fill="#14171F"
-                    stroke="#CFC9BC"
-                    stroke-opacity="0.46"
-                    stroke-width="1.5"
-                  />
-                </g>
-
-                <!-- Dynamic Region Density Overlays & Interactive Pins (Rendered by app.js) -->
-                <g id="atlas-pins-layer"></g>
-              </svg>
-            </div>
-
-            <div class="atlas-region-strip" id="atlas-region-buttons" aria-label="Select neuroanatomical structure">
-              <!-- Region quick-buttons populated by app.js -->
-            </div>
-          </div>
-
-          <!-- Right Column: Regional Neuropharmacology Readout -->
-          <aside class="atlas-inspector-card" aria-live="polite">
-            <div class="module-bar">
-              <span class="module-bar-title">Regional Neuropharmacology Readout</span>
-              <span class="mni-coord-badge" id="atlas-mni-coord">MNI [-26, -20, -14]</span>
-            </div>
-            <div class="atlas-inspector-body" id="atlas-inspector-body">
-              <!-- Populated dynamically by app.js -->
-            </div>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         EVIDENCE GRADING HIERARCHY: TIERS A–E + TRANSLATION COMPARATOR
-         ==================================================================== -->
-    <section class="section-block" id="evidence-grading">
-      <div class="container">
-        <div class="section-header-row">
-          <div>
-            <div class="eyebrow">
-              <span class="eyebrow-code">MODULE // 05</span>
-              <span>Strict Epistemic Stratification</span>
-            </div>
-            <h2 class="section-heading">Human trials, cohorts, mice, cells, and inference are never treated the same.</h2>
-          </div>
-          <p class="section-lead">
-            Most wellness sites cite a 50&nbsp;µM cancer-cell dish assay or a forced-swim mouse paper as proof that an oral capsule works in patients. Pharmapedia enforces hard epistemic ceilings across five distinct tiers—automatically auditing allometric animal doses and unbound human plasma exposure (<em>C</em><sub>max,u</sub>).
-          </p>
-        </div>
-
-        <!-- 5-Tier Architecture Columns -->
-        <div class="tier-architecture-grid" id="tier-cards-grid">
-          <!-- Populated from data.js by app.js -->
-        </div>
-
-        <!-- Interactive Same-Compound Translation Gap Comparator -->
-        <div class="comparator-panel">
-          <div class="comparator-head">
-            <div>
-              <div class="eyebrow" style="margin-bottom: 6px;">
-                <span class="eyebrow-code">TRANSLATION AUDIT</span>
-                <span>Same Compound Across All 5 Evidence Tiers</span>
+            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; padding-top:12px; border-top:1px solid var(--stone-line); margin-top:12px;">
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary btn-sm" id="export-markdown-btn">Export Clinician Brief (.md)</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="copy-markdown-btn">Copy Markdown</button>
               </div>
-              <h3 style="margin: 0 0 6px 0; font-size: 1.35rem; letter-spacing: -0.02em;" id="comparator-case-title">
-                Trans-Resveratrol · SIRT1 &amp; Cardiometabolic Aging
-              </h3>
-              <p style="margin: 0; font-size: 0.875rem; color: var(--text-secondary); max-width: 72ch;" id="comparator-case-summary">
-                <!-- Populated by app.js -->
-              </p>
-            </div>
-            <div class="filter-pill-group" id="comparator-case-tabs" role="tablist" aria-label="Select translation audit example">
-              <!-- Populated by app.js -->
-            </div>
-          </div>
-
-          <div class="comparator-rows" id="comparator-rows">
-            <!-- Populated by app.js -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         PROTOCOL LOG & 100% FREE OPEN-SOURCE GITHUB ACCESS
-         ==================================================================== -->
-    <section class="section-block" id="protocol-log">
-      <div class="container">
-        <div class="section-header-row">
-          <div>
-            <div class="eyebrow">
-              <span class="eyebrow-code">MODULE // 06</span>
-              <span>Private Protocol Log &amp; Open-Source Lifetime Access</span>
-            </div>
-            <h2 class="section-heading">Zero paywalls. Zero cloud tracking. Run straight from GitHub.</h2>
-          </div>
-          <p class="section-lead">
-            Pharmapedia is 100% free and open-source software (MIT License). Your protocol log stays strictly in your own browser's local memory—never sent to any server—and can be exported anytime as a clean Markdown clinical brief for physician review.
-          </p>
-        </div>
-
-        <div class="protocol-split" style="margin-bottom: 48px;">
-          <!-- Left: Interactive Local-Only Protocol Log -->
-          <div class="protocol-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Local-First Protocol &amp; Washout Log (Browser Memory Only)</span>
-              <span class="mono-code" style="font-size: 0.72rem; color: var(--signal-ok);">0 Network Requests</span>
-            </div>
-            <div class="protocol-body">
-              <form id="protocol-add-form" class="protocol-form-row" aria-label="Add compound to local protocol log">
-                <input
-                  type="text"
-                  id="protocol-name-input"
-                  class="clinical-input"
-                  placeholder="Compound (e.g., Metformin XR)"
-                  required
-                />
-                <input
-                  type="text"
-                  id="protocol-dose-input"
-                  class="clinical-input"
-                  placeholder="Dose (e.g., 500 mg)"
-                  required
-                />
-                <select id="protocol-schedule-select" class="clinical-select" aria-label="Dosing schedule">
-                  <option value="AM Fasting">AM Fasting</option>
-                  <option value="AM With Meal">AM With Meal</option>
-                  <option value="PM Dinner">PM Dinner</option>
-                  <option value="HS Bedtime">HS Bedtime</option>
-                  <option value="Weekly SC">Weekly SC</option>
-                </select>
-                <button type="submit" class="btn btn-primary">Add Entry</button>
-              </form>
-
-              <div class="protocol-log-list" id="protocol-log-list" aria-live="polite">
-                <!-- Populated by app.js -->
-              </div>
-
-              <div class="protocol-actions-bar">
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                  <button type="button" class="btn btn-primary btn-sm" id="export-markdown-btn">
-                    Export Clinician Brief (.md)
-                  </button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="copy-markdown-btn">
-                    Copy Summary
-                  </button>
-                </div>
-                <button type="button" class="btn btn-outline-dark btn-sm" id="clear-protocol-btn">
-                  Purge Local Log
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: Privacy & Clinical Export Guarantee -->
-          <div class="access-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Architecture &amp; Patient Privacy Posture</span>
-              <span class="mono-code" style="font-size: 0.72rem; color: var(--text-muted);">Air-Gap Compatible</span>
-            </div>
-            <div class="access-body">
-              <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; letter-spacing: -0.015em;">
-                Why clinical research tools belong in open static code
-              </h3>
-              <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0 0 16px 0;">
-                Querying sensitive psychiatric, metabolic, or oncology regimens on ad-supported medical portals leaks search history to third-party data brokers. Pharmapedia ships its typography, graph engine, and graded literature dataset as static files—meaning zero backend query logs exist.
-              </p>
-              <table class="deploy-spec-table" aria-label="Privacy and hosting specifications">
-                <tbody>
-                  <tr>
-                    <td>Hosting Target</td>
-                    <td>GitHub Pages (Static HTML/CSS/JS)</td>
-                  </tr>
-                  <tr>
-                    <td>Typography</td>
-                    <td>Self-Hosted Manrope Variable (SIL OFL)</td>
-                  </tr>
-                  <tr>
-                    <td>Analytics / Cookies</td>
-                    <td>None (0 trackers, 0 external beacons)</td>
-                  </tr>
-                  <tr>
-                    <td>Offline Operation</td>
-                    <td>Works via local clone or static bundle</td>
-                  </tr>
-                  <tr>
-                    <td>Source License</td>
-                    <td>MIT Permissive Open Source</td>
-                  </tr>
-                </tbody>
-              </table>
+              <button type="button" class="btn btn-outline-dark btn-sm" id="clear-protocol-btn">Clear Local Log</button>
             </div>
           </div>
         </div>
 
-        <!-- Lifetime Access · 100% Free & Open Source Block -->
-        <div class="open-access-grid" id="open-access">
-          <div class="access-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Public Scientific Release · Unrestricted Access</span>
-              <span class="violet-brand-tag">Lifetime Access · Free</span>
-            </div>
-            <div class="access-body">
-              <div class="price-zero-row">
-                <span class="price-figure tabular">$0</span>
-                <span class="price-term">Free lifetime access · No subscription · 100% Open Source</span>
-              </div>
-              <ul class="feature-checklist">
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Full access to compound monographs, receptor affinities (<em>K</em><sub>i</sub> / EC<sub>50</sub>), and CYP450/transporter matrices.</span>
-                </li>
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Interactive multi-compound Stack Checker, Sagittal Brain Atlas, and 5-tier Evidence Grading audits.</span>
-                </li>
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Auditable open dataset (<code>data.js</code> / JSON) with clickable PubMed PMIDs, PubChem CIDs, and ChEMBL IDs.</span>
-                </li>
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Directly accessible from any GitHub Pages URL—no build server, API keys, or sign-up wall required.</span>
-                </li>
-              </ul>
-
-              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="#top" class="btn btn-primary" id="focus-search-cta">
-                  Search Compound Library Now
-                </a>
-                <button type="button" class="btn btn-secondary" id="download-dataset-btn">
-                  Download Open Dataset (.json)
-                </button>
-              </div>
-            </div>
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Federated Open Data Sources</h2>
+            <span class="mono-code" style="font-size:0.72rem; color:var(--text-muted);">MIT Open Source</span>
           </div>
-
-          <div class="access-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Self-Host, Fork, or Run from GitHub Pages</span>
-              <span class="mono-code" style="font-size: 0.72rem; color: var(--accent-coral);">z3n1thy/Pharmawiki</span>
-            </div>
-            <div class="access-body">
-              <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 12px 0;">
-                Deploy your own mirror in one click by enabling <strong>GitHub Pages</strong> on the repository root, or clone locally for offline clinic &amp; lab reference:
-              </p>
-
-              <label for="clone-cmd-input" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--stone-solid); display: block;">
-                Clone Repository (HTTPS)
-              </label>
-              <div class="clone-command-row">
-                <input
-                  type="text"
-                  id="clone-cmd-input"
-                  class="clinical-input mono-code"
-                  value="git clone https://github.com/z3n1thy/Pharmawiki.git"
-                  readonly
-                  aria-label="Git clone command"
-                />
-                <button type="button" class="btn btn-primary" id="copy-clone-btn">Copy</button>
-              </div>
-
-              <div style="margin-top: 20px; padding: 14px; background: var(--bg-canvas); border: 1px solid var(--stone-line); border-radius: var(--radius-xs); font-size: 0.8125rem; color: var(--text-secondary);">
-                <strong style="color: var(--text-primary); display: block; margin-bottom: 4px;">GitHub Website Ready (<code>.nojekyll</code> Static Root)</strong>
-                Works automatically at <code>https://z3n1thy.github.io/Pharmawiki/</code> using relative asset paths—simply set <strong>Settings → Pages</strong> to deploy from branch <code>main</code> / <code>/(root)</code>.
-              </div>
-
-              <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">
-                  Open GitHub Repository →
-                </a>
-                <a href="https://github.com/z3n1thy/Pharmawiki/issues" target="_blank" rel="noopener noreferrer">
-                  Submit Study Citation / PR →
-                </a>
-              </div>
-            </div>
+          <div class="panel-body" style="font-size: 0.84rem; color: var(--text-secondary);">
+            <p style="margin: 0 0 12px 0;">
+              Pharmapedia queries public scientific repositories directly from your browser with zero tracking middleware:
+            </p>
+            <ul style="margin: 0; padding-left: 18px; display:flex; flex-direction:column; gap:8px;">
+              <li><strong>NCBI PubChem PUG-REST &amp; PUG-View:</strong> 118M+ chemical structures, IUPAC properties, XLogP, TPSA, and toxicology/pharmacology summaries.</li>
+              <li><strong>EBI ChEMBL v34:</strong> 2.4M+ bioactive molecules, clinical approval phases, ATC classes, and human target <em>K</em><sub>i</sub> / IC<sub>50</sub> / EC<sub>50</sub> assays.</li>
+              <li><strong>US FDA OpenFDA Drug Labels:</strong> Official SPL prescribing monographs, CYP450 pharmacokinetics, boxed warnings, and drug-drug interactions.</li>
+              <li><strong>NCBI PubMed E-Utilities:</strong> 37M+ primary biomedical publications stratified by study design (Grades A–E).</li>
+            </ul>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Clinical Disclaimer & Open Provenance Footer -->
-  <footer class="site-footer">
-    <div class="container">
-      <div class="disclaimer-box" role="note" aria-label="Medical and clinical disclaimer">
-        <strong>Clinical &amp; Educational Notice:</strong> Pharmapedia is an open-source biomedical literature synthesis and pathway visualization reference designed for educational research and clinician-patient discussion. It does not provide medical advice, diagnosis, or individualized prescribing directives. Pharmacokinetic exposure varies substantially with renal/hepatic function, pregnancy, age, and pharmacogenomic alleles (e.g., <code>CYP2D6</code>, <code>CYP2C19</code>, <code>SLCO1B1</code>). Always verify regimen modifications with a licensed physician or clinical pharmacist.
-      </div>
-
-      <div class="footer-grid">
-        <div>
-          <span class="brand-wordmark" style="margin-bottom: 8px;">Pharmapedia</span>
-          <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0 0 12px 0; max-width: 38ch;">
-            Open-source clinical compound library, receptor pathway mapper, and graded evidence ledger. Free forever under the MIT License.
-          </p>
-          <span class="violet-brand-tag">100% Free &amp; Open Source</span>
-        </div>
-
-        <div>
-          <h3 class="footer-col-title">Modules</h3>
-          <ul class="footer-links">
-            <li><a href="#top">Compound Monograph Search</a></li>
-            <li><a href="#study-library">Graded Study Library</a></li>
-            <li><a href="#stack-checker">Pathway &amp; Stack Checker</a></li>
-            <li><a href="#brain-atlas">Sagittal Brain Atlas</a></li>
-            <li><a href="#evidence-grading">5-Tier Evidence Rules</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 class="footer-col-title">Primary Data Provenance</h3>
-          <ul class="footer-links">
-            <li><a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubMed / MEDLINE (NCBI)</a></li>
-            <li><a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubChem Compound Database</a></li>
-            <li><a href="https://www.ebi.ac.uk/chembl/" target="_blank" rel="noopener noreferrer">ChEMBL Bioactivity DB</a></li>
-            <li><a href="https://www.guidetopharmacology.org/" target="_blank" rel="noopener noreferrer">IUPHAR / BPS Pharmacology</a></li>
-            <li><a href="https://human.brain-map.org/" target="_blank" rel="noopener noreferrer">Allen Human Brain Atlas</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 class="footer-col-title">Open Source &amp; GitHub</h3>
-          <ul class="footer-links">
-            <li><a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
-            <li><a href="./LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
-            <li><a href="./data.js" target="_blank" rel="noopener noreferrer">Inspect Raw Dataset (<code>data.js</code>)</a></li>
-            <li><a href="#protocol-log">Local Protocol Log</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <span>© 2026 Pharmapedia / Pharmawiki Open Contributors · Released under the MIT License.</span>
-        <span class="mono-code">Built for GitHub Pages · Zero Tracking · Evidence-First</span>
-      </div>
-    </div>
+  <footer class="workbench-footer">
+    <span>
+      <strong>Clinical Disclaimer:</strong> Educational literature &amp; pharmacology reference only; not medical advice or prescribing guidance. Verify all regimen decisions with a licensed physician or clinical pharmacist.
+    </span>
+    <span class="mono-code">
+      Pharmapedia Open Index · MIT License · <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">GitHub Source</a>
+    </span>
   </footer>
 
   <div class="clinical-toast" id="clinical-toast" role="status" aria-live="polite"></div>
 
+  <script src="./catalog.js"></script>
   <script src="./data.js"></script>
   <script src="./app.js"></script>
 </body>
