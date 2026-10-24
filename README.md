@@ -1,61 +1,40 @@
-# Pharmapedia — Open-Source Clinical Research Library
+# Pharmapedia — Global Drug, Compound & Clinical Evidence Workbench
 
-**Pharmapedia** is a 100% free, open-source clinical pharmacology reference library, receptor pathway mapper, and multi-compound stack checker built for patients, clinicians, and independent researchers.
+**Pharmapedia** is an open-source clinical pharmacology workbench, multi-compound stack/pathway checker, and 5-tier graded literature explorer built for patients, clinicians, and researchers.
 
-It runs **100% client-side as a static website directly from GitHub Pages** (`index.html` + `styles.css` + `data.js` + `app.js`) with **zero backend servers, zero accounts, zero subscriptions, and zero telemetry**.
-
----
-
-## Core Modules
-
-1. **Compound Monograph Search (`Module 01`)** — Instant client-side search across reference dossiers indexing bioavailability, half-life ($t_{1/2}$), blood-brain barrier partitioning ($K_{p,\text{uu,brain}}$), CYP450/transporter clearance, receptor binding ($K_i$ / $\text{EC}_{50}$), and PubMed-sourced outcome claims.
-2. **Quantified Study Library (`Module 02`)** — Filterable biomedical claim ledger with inline **Methodological Audit Drawers** detailing study design, allometric dosing parity, confounders, and honest reporting of large **null Phase III trials** alongside positive outcomes.
-3. **Interactive Pathway Map & Stack Checker (`Module 03`)** — Tri-partite SVG network connecting **Active Regimen Compounds → Molecular Targets & CYP Enzymes → Physiological Risk Axes**, computing multi-agent convergence (e.g., `SERT` synergy, `CYP2D6` prodrug phenoconversion, `PXR` induction, `AMPK` overlap).
-4. **Neuroanatomical Brain Atlas (`Module 04`)** — Interactive MNI152 sagittal brain schematic pairing **Allen Human Brain Atlas** regional transcript expression (`mRNA z-scores`) with human PET receptor occupancy and BBB permeability.
-5. **Strict 5-Tier Evidence Grading (`Module 05`)** — Hard epistemic separation between:
-   - **Grade A (`Ceiling 1.00`)**: Human Randomized Controlled Trials, Meta-Analyses & Clinical PK Crossover Studies
-   - **Grade B (`Ceiling 0.65`)**: Human Observational Registries, Prospective Cohorts & Mendelian Randomization
-   - **Grade C (`Ceiling 0.35`)**: In Vivo Animal Models (with FDA $K_m$ Human Equivalent Dose scaling checks)
-   - **Grade D (`Ceiling 0.15`)**: In Vitro Cellular & Biochemical Assays (audited against achievable human unbound $C_{\text{max,u}}$)
-   - **Grade E (`Ceiling 0.05`)**: Mechanistic & In Silico Pathway Inference (visually quarantined with dashed edges)
-6. **Local-First Protocol Log (`Module 06`)** — Browser-local regimen tracker (`localStorage` only, 0 network requests) with 1-click **Clinician Review Brief (`.md`)** and full **Open Dataset (`.json`)** export.
+It runs **100% client-side as a static website directly from GitHub Pages** (`index.html`, `styles.css`, `catalog.js`, `data.js`, `app.js`) with **zero backend servers, zero API keys, zero accounts, and zero telemetry**.
 
 ---
 
-## Hosting Directly on GitHub Pages
+## Global Compound & Drug Coverage
 
-This repository is pre-configured to work out-of-the-box on **GitHub Pages** with zero build step required:
+Pharmapedia combines an instant built-in clinical directory (**267 core prescription medications, OTC drugs, biologics, peptides, supplements, nootropics, hormones, botanicals, and neurotransmitters**) with **live client-side federated queries** across four public scientific databases directly from your browser:
 
-- Includes `.nojekyll` and relative asset paths (`./styles.css`, `./data.js`, `./app.js`, `./assets/...`) so it works seamlessly under both subpath URLs (`https://z3n1thy.github.io/Pharmawiki/`) and custom root domains.
-- Self-hosts `Manrope` variable `.woff2` fonts (`assets/fonts/`, SIL Open Font License 1.1) so zero external requests to third-party font CDNs are needed.
-
-### Enable in 30 Seconds on GitHub
-1. Open **Settings → Pages** in your GitHub repository (`https://github.com/z3n1thy/Pharmawiki/settings/pages`).
-2. Under **Build and deployment → Source**, choose **Deploy from a branch**.
-3. Select branch **`main`** and folder **`/ (root)`**, then click **Save**.
-4. After ~30–60 seconds, visit **`https://z3n1thy.github.io/Pharmawiki/`**.
-
-### Run Locally / Offline
-```bash
-git clone https://github.com/z3n1thy/Pharmawiki.git
-cd Pharmawiki
-python3 -m http.server 8080
-```
-Then open `http://localhost:8080` (or open `index.html` directly in any modern browser).
+1. **NCBI PubChem (`PUG-REST`, `Autocomplete` & `PUG-View`)** — **118,000,000+ chemical compounds**, 2D molecular structures, IUPAC names, SMILES, InChIKeys, `XLogP3`, `TPSA`, Lipinski Rule-of-5 parameters, and pharmacology/toxicology monographs.
+2. **EBI ChEMBL (`v34 REST API`)** — **2,400,000+ bioactive molecules**, clinical approval phases (Phase I–IV), verified mechanisms of action, and quantitative human receptor/enzyme binding assays ($K_i$, $\text{IC}_{50}$, $\text{EC}_{50}$, $K_d$ in `nM` / `pChEMBL`).
+3. **US FDA OpenFDA (`SPL Drug Labels`)** — Official prescribing indications, clinical pharmacology, CYP450 pharmacokinetics, **Boxed Warnings**, contraindications, and cross-drug label interaction checks.
+4. **NCBI PubMed (`E-Utilities`)** — **37,000,000+ biomedical publications** automatically stratified into Pharmapedia's **5-Tier Evidence Grading System** (`Grade A` Human RCTs & Meta-Analyses, `Grade B` Human Cohorts, `Grade C` Animal In Vivo, `Grade D` Cell/In Vitro, `Grade E` Mechanistic Inference & Reviews).
 
 ---
 
-## Contributing New Compounds & Graded Studies
+## Five Workspace Modules
 
-All compounds, pathway edges, brain atlas expression profiles, and graded study records live in plain, human-readable JavaScript/JSON inside [`data.js`](./data.js). Every contributed claim must include:
-- Primary **PubMed PMID** (or `NCT` identifier), **PubChem CID**, and **ChEMBL ID** where applicable
-- Explicit **Evidence Tier (`A`–`E`)** following Module 05 rules
-- Exposure/dosing parity verification for preclinical (`Grade C`/`D`) entries
+- **`01 · Compound Workbench` (Default View)** — Opens straight into compound search and multi-database dossier synthesis, including computed **Blood-Brain Barrier CNS Multiparameter Optimization (`CNS MPO 0.0–6.0`)** scores.
+- **`02 · Stack & Pathway Checker`** — Add *any* global drug, botanical, or supplement to map shared **CYP450 (`3A4`, `2D6`, `2C9`, `2C19`, `1A2`)**, transporter (`P-gp`, `OATP1B1`, `OCT2`), serotonergic, hemodynamic (`NO/cGMP`, `QTc`, `Coagulation`), CNS-depressant, and renal (`RAAS` / `Li+`) collisions alongside direct FDA drug-label cross-matches.
+- **`03 · PubMed Evidence & Grading`** — Query any compound + disease/outcome across PubMed stratified by study tier, and inspect side-by-side translation gap audits.
+- **`04 · CNS & Brain Atlas`** — Interactive stereotactic `MNI152` sagittal brain schematic pairing **Allen Human Brain Atlas** regional transcript expression with BBB partitioning.
+- **`05 · Protocol Log`** — Private `localStorage`-only regimen log with 1-click `.md` clinician brief export.
 
 ---
 
-## Clinical Disclaimer & License
+## GitHub Pages Deployment
 
-Pharmapedia is an educational and clinical literature-synthesis tool and does not constitute medical advice, diagnosis, or individualized treatment recommendations. Always consult a qualified physician or clinical pharmacist before modifying any medication or supplement regimen.
+1. Open **Settings → Pages** (`https://github.com/z3n1thy/Pharmawiki/settings/pages`).
+2. Select **Deploy from a branch** → **`main`** → **`/ (root)`** → **Save**.
+3. Access live at **`https://z3n1thy.github.io/Pharmawiki/`** (supports deep links such as `?q=Atorvastatin`).
 
-Released 100% free and open-source under the **[MIT License](./LICENSE)**. Typography (`Manrope`) is licensed under the **[SIL Open Font License 1.1](./assets/fonts/OFL.txt)**.
+---
+
+## License & Disclaimer
+
+Educational pharmacology & biomedical literature reference only; not medical advice. Released under the **[MIT License](./LICENSE)**; self-hosted `Manrope` typography licensed under **[SIL Open Font License 1.1](./assets/fonts/OFL.txt)**.
