@@ -117,7 +117,7 @@
             </div>
           </div>
           <p class="search-help">
-            Suggestions appear as you type; live catalog lookups begin after two characters and go directly to PubChem and RxNorm. Opening a record may also request PubChem properties, structure images, and openFDA label data. Catalogs are not exhaustive, and Pharmawiki does not save search history.
+            Suggestions appear as you type; live catalog lookups begin after two characters and go directly to PubChem and RxNorm. Opening a record may also request PubChem properties and openFDA label data. Catalogs are not exhaustive, and Pharmawiki does not save search history.
           </p>
           <div class="quick-search-row">
             <span class="quick-search-label">Quick lookups</span>
@@ -136,7 +136,7 @@
             <div class="catalog-results" id="catalog-results" aria-live="polite">
               <div class="catalog-empty-state">
                 <h2>Start with a compound or medicine</h2>
-                <p>Type at least two characters to search PubChem and RxNorm. Open a result for its own detail page, structure image, summary, and available label information.</p>
+                <p>Type at least two characters to search PubChem and RxNorm. Open a result for its own detail page, brand/package reference illustration, summary, studies, brain map, and available label information.</p>
               </div>
             </div>
           </section>
@@ -151,6 +151,10 @@
         <div class="drug-page-toolbar">
           <a href="#search" class="back-to-search">← Back to compound search</a>
           <span class="drug-page-record-source" id="drug-page-record-source">Reference record</span>
+          <div class="drug-page-toolbar-actions">
+            <button type="button" class="btn btn-outline-dark btn-sm" id="copy-drug-link">Copy page link</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="print-drug-page">Print / Save PDF</button>
+          </div>
         </div>
 
         <div class="drug-page-heading">
@@ -163,71 +167,177 @@
             <p class="drug-page-subtitle" id="drug-page-subtitle">Select a record from search to view its details.</p>
             <div class="drug-page-identifiers" id="drug-page-identifiers"></div>
           </div>
-          <figure class="drug-structure-card">
-            <div class="drug-structure-frame">
-              <img id="drug-structure-image" alt="" loading="lazy" hidden />
-              <div class="drug-structure-placeholder" id="drug-structure-placeholder">Chemical structure image loads from PubChem when available.</div>
+          <figure class="drug-product-card">
+            <div class="drug-product-art" id="drug-product-art" aria-live="polite">
+              <p class="drug-product-placeholder">A brand/package reference will appear when a record is opened.</p>
             </div>
-            <figcaption>2D chemical structure — not a photo or pill identification. Tablet appearance varies by product and manufacturer.</figcaption>
+            <figcaption id="drug-product-caption">Illustrative package artwork only — not an authentic product photo, pill identifier, or confirmation of a specific market package. Product names, forms, and packaging vary by country, strength, and manufacturer.</figcaption>
           </figure>
         </div>
 
-        <div class="drug-page-layout">
-          <div class="drug-primary-column">
-            <section class="drug-info-card" aria-labelledby="drug-overview-heading">
-              <div class="module-bar">
-                <h2 class="module-bar-title" id="drug-overview-heading">AI overview</h2>
-                <span class="overview-origin-label">Source-grounded · not a live AI response</span>
-              </div>
-              <div class="drug-overview-body" id="drug-overview">
-                <p>Open a compound record from search to load its overview.</p>
-              </div>
-            </section>
+        <nav class="drug-detail-tabs" id="drug-detail-tabs" role="tablist" aria-label="Compound detail sections">
+          <button type="button" class="drug-detail-tab is-active" id="drug-tab-compound" role="tab" aria-selected="true" aria-controls="drug-panel-compound" tabindex="0" data-drug-tab="compound">Compound</button>
+          <button type="button" class="drug-detail-tab" id="drug-tab-studies" role="tab" aria-selected="false" aria-controls="drug-panel-studies" tabindex="-1" data-drug-tab="studies">Studies</button>
+          <button type="button" class="drug-detail-tab" id="drug-tab-brain" role="tab" aria-selected="false" aria-controls="drug-panel-brain" tabindex="-1" data-drug-tab="brain">Brain</button>
+          <button type="button" class="drug-detail-tab" id="drug-tab-map" role="tab" aria-selected="false" aria-controls="drug-panel-map" tabindex="-1" data-drug-tab="map">Map</button>
+          <button type="button" class="drug-detail-tab" id="drug-tab-stack" role="tab" aria-selected="false" aria-controls="drug-panel-stack" tabindex="-1" data-drug-tab="stack">Stack / cart</button>
+        </nav>
 
-            <section class="drug-info-card" aria-labelledby="drug-label-heading">
-              <div class="module-bar">
-                <h2 class="module-bar-title" id="drug-label-heading">Uses, side effects &amp; warnings</h2>
-                <span class="overview-origin-label">U.S. FDA label data</span>
-              </div>
-              <p class="drug-label-disclaimer">Label information is U.S.-specific and can vary by brand, formulation, route, and indication. It is not a complete list and is not a substitute for the current product leaflet or a clinician.</p>
-              <div class="drug-label-state" id="drug-label-state" role="status" aria-live="polite">Looking for an FDA label for this record…</div>
-              <div class="drug-label-grid" id="drug-label-grid" hidden>
-                <section class="drug-label-field"><h3>What it is used for</h3><div id="drug-label-indications"></div></section>
-                <section class="drug-label-field"><h3>Reported side effects</h3><div id="drug-label-adverse"></div></section>
-                <section class="drug-label-field"><h3>Warnings</h3><div id="drug-label-warnings"></div></section>
-                <section class="drug-label-field"><h3>Contraindications</h3><div id="drug-label-contraindications"></div></section>
-                <section class="drug-label-field"><h3>Interactions</h3><div id="drug-label-interactions"></div></section>
-              </div>
-            </section>
+        <section class="drug-tab-panel" id="drug-panel-compound" role="tabpanel" aria-labelledby="drug-tab-compound" tabindex="0" data-drug-panel="compound">
+          <div class="drug-page-layout">
+            <div class="drug-primary-column">
+              <section class="drug-info-card" aria-labelledby="drug-overview-heading">
+                <div class="module-bar">
+                  <h2 class="module-bar-title" id="drug-overview-heading">Overview</h2>
+                  <span class="overview-origin-label">Source-grounded · not a live AI response</span>
+                </div>
+                <div class="drug-overview-body" id="drug-overview">
+                  <p>Open a compound record from search to load its overview.</p>
+                </div>
+              </section>
 
-            <section class="drug-info-card" aria-labelledby="curated-pharmacology-heading">
-              <div class="module-bar">
-                <h2 class="module-bar-title" id="curated-pharmacology-heading">Curated pharmacology &amp; evidence</h2>
-                <span class="dossier-source-pill" id="dossier-source-label">Catalog record</span>
-              </div>
-              <div class="dossier-identifiers" id="dossier-ids"></div>
-              <div class="dossier-body" id="dossier-body">
-                <div class="empty-detail-state"><p>Loading available reference data…</p></div>
-              </div>
-            </section>
+              <section class="drug-info-card" aria-labelledby="drug-label-heading">
+                <div class="module-bar">
+                  <h2 class="module-bar-title" id="drug-label-heading">Uses, side effects &amp; warnings</h2>
+                  <span class="overview-origin-label">U.S. FDA label data</span>
+                </div>
+                <p class="drug-label-disclaimer">Label information is U.S.-specific and can vary by brand, formulation, route, and indication. It is not a complete list and is not a substitute for the current product leaflet or a clinician.</p>
+                <div class="drug-label-state" id="drug-label-state" role="status" aria-live="polite">Looking for an FDA label for this record…</div>
+                <div class="drug-label-grid" id="drug-label-grid" hidden>
+                  <section class="drug-label-field"><h3>What it is used for</h3><div id="drug-label-indications"></div></section>
+                  <section class="drug-label-field"><h3>Reported side effects</h3><div id="drug-label-adverse"></div></section>
+                  <section class="drug-label-field"><h3>Warnings</h3><div id="drug-label-warnings"></div></section>
+                  <section class="drug-label-field"><h3>Contraindications</h3><div id="drug-label-contraindications"></div></section>
+                  <section class="drug-label-field"><h3>Interactions</h3><div id="drug-label-interactions"></div></section>
+                </div>
+              </section>
+
+              <section class="drug-info-card" aria-labelledby="curated-pharmacology-heading">
+                <div class="module-bar">
+                  <h2 class="module-bar-title" id="curated-pharmacology-heading">Pharmacology &amp; curated evidence</h2>
+                  <span class="dossier-source-pill" id="dossier-source-label">Catalog record</span>
+                </div>
+                <div class="dossier-identifiers" id="dossier-ids"></div>
+                <div class="dossier-body" id="dossier-body">
+                  <div class="empty-detail-state"><p>Loading available reference data…</p></div>
+                </div>
+              </section>
+            </div>
+
+            <aside class="drug-sidebar">
+              <section class="drug-info-card">
+                <div class="module-bar"><h2 class="module-bar-title">Quick facts</h2></div>
+                <div class="drug-facts-body" id="drug-facts"><p>Facts will appear when a record is opened.</p></div>
+              </section>
+              <section class="drug-info-card">
+                <div class="module-bar"><h2 class="module-bar-title">Source records</h2></div>
+                <div class="drug-source-links" id="drug-source-links">
+                  <a id="drug-pubchem-link" href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubChem record ↗</a>
+                  <a id="drug-rxnorm-link" href="https://rxnav.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">RxNorm record ↗</a>
+                  <a id="drug-fda-link" href="https://api.fda.gov/" target="_blank" rel="noopener noreferrer" hidden>openFDA label search ↗</a>
+                  <a id="drug-dailymed-link" href="https://dailymed.nlm.nih.gov/dailymed/" target="_blank" rel="noopener noreferrer">Search DailyMed labels ↗</a>
+                </div>
+              </section>
+              <section class="drug-info-card">
+                <div class="module-bar"><h2 class="module-bar-title">Related local records</h2></div>
+                <p class="drug-related-note">Shared targets are an index aid, not proof of equivalent effects.</p>
+                <div class="drug-related-links" id="drug-related-links"></div>
+              </section>
+            </aside>
           </div>
+        </section>
 
-          <aside class="drug-sidebar">
-            <section class="drug-info-card">
-              <div class="module-bar"><h2 class="module-bar-title">Quick facts</h2></div>
-              <div class="drug-facts-body" id="drug-facts"><p>Facts will appear when a record is opened.</p></div>
-            </section>
-            <section class="drug-info-card">
-              <div class="module-bar"><h2 class="module-bar-title">Source records</h2></div>
-              <div class="drug-source-links" id="drug-source-links">
-                <a id="drug-pubchem-link" href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubChem record ↗</a>
-                <a id="drug-rxnorm-link" href="https://rxnav.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">RxNorm record ↗</a>
-                <a id="drug-fda-link" href="https://api.fda.gov/" target="_blank" rel="noopener noreferrer" hidden>openFDA label search ↗</a>
-                <a id="drug-dailymed-link" href="https://dailymed.nlm.nih.gov/dailymed/" target="_blank" rel="noopener noreferrer">Search DailyMed labels ↗</a>
+        <section class="drug-tab-panel" id="drug-panel-studies" role="tabpanel" aria-labelledby="drug-tab-studies" tabindex="0" data-drug-panel="studies" hidden>
+          <div class="drug-tab-intro">
+            <div><span class="eyebrow-code">EVIDENCE LEDGER</span><h2>Studies for this record</h2></div>
+            <p>Bundled study claims matched to the selected compound, with grades, outcomes, limitations, and PubMed links. A missing entry does not mean evidence is absent.</p>
+          </div>
+          <div class="drug-panel-actions">
+            <a class="btn btn-outline-dark btn-sm" id="drug-studies-pubmed-link" href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">Search PubMed ↗</a>
+            <a class="btn btn-outline-dark btn-sm" href="#studies">Open full study library →</a>
+          </div>
+          <div class="drug-study-list" id="drug-studies-list" aria-live="polite"></div>
+        </section>
+
+        <section class="drug-tab-panel" id="drug-panel-brain" role="tabpanel" aria-labelledby="drug-tab-brain" tabindex="0" data-drug-panel="brain" hidden>
+          <div class="drug-tab-intro">
+            <div><span class="eyebrow-code">REGIONAL REFERENCE</span><h2>Brain effects &amp; atlas matches</h2></div>
+            <p>Explore bundled target and region records. A transcript or literature match does not establish brain exposure, target engagement, benefit, or the location of side effects.</p>
+          </div>
+          <div class="drug-brain-grid">
+            <figure class="drug-brain-card">
+              <div class="module-bar"><span class="module-bar-title">Sagittal brain schematic</span><span class="mono-code">Atlas index · not diagnostic</span></div>
+              <div class="drug-brain-svg-wrap">
+                <svg id="drug-brain-svg" class="drug-brain-svg" viewBox="0 0 660 350" role="img" aria-label="Brain schematic with regions listed for the selected compound">
+                  <g stroke="#CFC9BC" stroke-opacity="0.08" stroke-width="1"><line x1="80" y1="20" x2="80" y2="332"/><line x1="170" y1="20" x2="170" y2="332"/><line x1="260" y1="20" x2="260" y2="332"/><line x1="350" y1="20" x2="350" y2="332"/><line x1="440" y1="20" x2="440" y2="332"/><line x1="530" y1="20" x2="530" y2="332"/><line x1="20" y1="65" x2="640" y2="65"/><line x1="20" y1="135" x2="640" y2="135"/><line x1="20" y1="205" x2="640" y2="205"/><line x1="20" y1="275" x2="640" y2="275"/></g>
+                  <g transform="translate(60 0)">
+                    <path d="M106 204C92 182 94 142 114 108C136 71 182 46 244 40C314 34 382 52 424 94C456 126 468 168 454 204C442 232 414 242 384 240C356 238 338 224 316 222C286 220 264 240 232 242C198 244 178 226 154 224C128 222 116 218 106 204Z" fill="#151821" stroke="#CFC9BC" stroke-opacity=".55" stroke-width="2"/>
+                    <path d="M188 176C182 150 212 130 266 128C316 126 354 142 362 168C365 178 352 186 340 180C326 172 304 152 266 152C228 152 212 164 206 180C202 188 191 186 188 176Z" fill="#1B202B" stroke="#CFC9BC" stroke-opacity=".42"/>
+                    <path d="M358 242C386 232 428 238 444 262C456 282 444 308 416 316C386 324 356 310 348 286C344 270 346 250 358 242Z" fill="#151821" stroke="#CFC9BC" stroke-opacity=".48"/>
+                    <path d="M284 202C280 224 282 248 296 268C308 286 318 308 324 332L354 332C348 304 344 278 342 252C340 228 328 210 312 202Z" fill="#181D26" stroke="#CFC9BC" stroke-opacity=".48"/>
+                  </g>
+                  <g id="drug-brain-pins"></g>
+                </svg>
               </div>
+              <figcaption>Region markers appear only when the bundled atlas contains a matching target-transcript or compound record.</figcaption>
+            </figure>
+            <aside class="drug-brain-regions-card" aria-live="polite">
+              <div class="module-bar"><span class="module-bar-title">Matched regions</span></div>
+              <div class="drug-brain-regions" id="drug-brain-regions"></div>
+            </aside>
+          </div>
+          <p class="drug-panel-caveat">Atlas data are exploratory reference signals; schematic coordinates are approximate and should not be interpreted as patient-specific anatomy or a treatment effect.</p>
+          <div class="drug-panel-actions"><a class="btn btn-outline-dark btn-sm" href="#atlas">Open interactive brain atlas →</a></div>
+        </section>
+
+        <section class="drug-tab-panel" id="drug-panel-map" role="tabpanel" aria-labelledby="drug-tab-map" tabindex="0" data-drug-panel="map" hidden>
+          <div class="drug-tab-intro">
+            <div><span class="eyebrow-code">TARGET PATHWAY MAP</span><h2>Mechanism &amp; evidence map</h2></div>
+            <p>See curated links from the compound to reported targets and mechanism notes. The map summarizes the bundled record and is not a complete pathway or clinical interaction assessment.</p>
+          </div>
+          <div class="drug-mechanism-map-wrap" id="drug-mechanism-map" aria-live="polite"></div>
+          <div class="drug-map-legend"><span><i class="map-legend-line"></i>Bundled target record</span><span>Grade labels reflect the local record’s evidence category.</span></div>
+          <div class="drug-panel-actions"><a class="btn btn-outline-dark btn-sm" href="#pathways">Open interactive pathway &amp; stack map →</a></div>
+        </section>
+
+        <section class="drug-tab-panel" id="drug-panel-stack" role="tabpanel" aria-labelledby="drug-tab-stack" tabindex="0" data-drug-panel="stack" hidden>
+          <div class="drug-tab-intro">
+            <div><span class="eyebrow-code">PERSONAL CART · STORED IN THIS BROWSER</span><h2>Build a reference stack</h2></div>
+            <p>Add medicines or supplements to see only the pathway links and interaction rules included in Pharmawiki’s small curated index. Unmatched items are kept in the cart but not assessed.</p>
+          </div>
+          <div class="drug-stack-layout">
+            <section class="drug-stack-cart-card">
+              <div class="module-bar"><span class="module-bar-title">Your stack</span><span class="mono-code" id="drug-stack-cart-count">0 items</span></div>
+              <div class="drug-stack-controls">
+                <button type="button" class="btn btn-primary btn-sm" id="add-current-to-stack">＋ Add this record</button>
+                <form class="drug-stack-add-form" id="drug-stack-add-form">
+                  <label class="visually-hidden" for="drug-stack-add-input">Add a medicine or supplement by name</label>
+                  <input id="drug-stack-add-input" name="compound" type="text" maxlength="100" autocomplete="off" placeholder="Add another medicine or supplement…" />
+                  <button type="submit" class="btn btn-outline-dark btn-sm">Add</button>
+                </form>
+                <button type="button" class="text-button" id="clear-drug-stack">Clear cart</button>
+              </div>
+              <ul class="drug-stack-cart-list" id="drug-stack-cart-list" aria-live="polite"></ul>
+              <div class="drug-stack-unassessed" id="drug-stack-unassessed" hidden></div>
             </section>
-          </aside>
-        </div>
+            <aside class="drug-stack-signal-card">
+              <div class="module-bar"><span class="module-bar-title">Reference interaction signal</span><span class="mono-code">Not a safety score</span></div>
+              <div class="drug-stack-meter-body">
+                <div class="drug-stack-thermometer-wrap">
+                  <div class="drug-stack-thermometer" id="drug-stack-meter" role="img" aria-label="Reference interaction signal not scored">
+                    <div class="drug-stack-meter-segments" id="drug-stack-meter-segments" aria-hidden="true"></div>
+                    <div class="drug-stack-meter-bulb" aria-hidden="true"></div>
+                  </div>
+                  <div class="drug-stack-meter-score"><strong id="drug-stack-score">—</strong><span>/ 10</span><small>indexed signal</small></div>
+                </div>
+                <p class="drug-stack-meter-caption" id="drug-stack-meter-caption">Add at least two compounds recognized by the pathway index to calculate its limited reference signal.</p>
+              </div>
+              <div class="drug-stack-feedback" id="drug-stack-feedback" aria-live="polite"></div>
+            </aside>
+          </div>
+          <p class="drug-panel-caveat">This rule-based reference index is not individualized, exhaustive, or clinically validated as a risk score. A low or absent signal does not mean a combination is safe. Check a pharmacist or prescriber before changing medicines.</p>
+          <div class="drug-panel-actions"><a class="btn btn-outline-dark btn-sm" href="#pathways" id="open-pathway-stack">Open full pathway map →</a><a class="btn btn-outline-dark btn-sm" href="#protocol">Open local protocol log →</a></div>
+        </section>
       </div>
     </section>
 
@@ -399,6 +509,7 @@
             </div>
           </aside>
         </div>
+        <p class="stack-index-disclaimer">This deterministic view only evaluates the compounds, edges, weights, and rules included in Pharmawiki’s small local reference index. It is not an exhaustive interaction checker or an individualized safety assessment; no flag does not mean a combination is safe.</p>
       </div>
     </section>
 
