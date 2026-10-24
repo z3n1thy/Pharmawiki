@@ -300,6 +300,123 @@
     );
   }
 
+  var activeSuggestionIndex = -1;
+
+  function renderCatalogSuggestionButton(source, index, id, name, description, sourceLabel) {
+    var token = id || index || 0;
+    var optionId = "catalog-option-" + source + "-" + String(token).replace(/[^A-Za-z0-9_-]/g, "-");
+    var attributes = ' id="' + escapeHtml(optionId) + '" data-result-source="' + escapeHtml(source) + '"';
+    if (id) attributes += ' data-result-id="' + escapeHtml(id) + '"';
+    if (index != null) attributes += ' data-result-index="' + index + '"';
+    return '<button type="button" role="option" aria-selected="false" class="catalog-suggestion"' + attributes + '>' +
+      '<span class="catalog-suggestion-copy"><strong>' + escapeHtml(name) +
+      '</strong><small>' + escapeHtml(description || "") +
+      '</small></span><span class="catalog-source-tag">' + escapeHtml(sourceLabel) + "</span></button>";
+  }
+
+  function closeCatalogSuggestions() {
+    var panel = document.getElementById("catalog-suggestions");
+    var input = document.getElementById("hero-compound-input");
+    if (panel) panel.hidden = true;
+    if (input) {
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+    }
+    activeSuggestionIndex = -1;
+  }
+
+  function setActiveCatalogSuggestion(index) {
+    var input = document.getElementById("hero-compound-input");
+    var options = Array.prototype.slice.call(document.querySelectorAll(".catalog-suggestion"));
+    activeSuggestionIndex = index >= 0 && index < options.length ? index : -1;
+    options.forEach(function (option, optionIndex) {
+      var active = optionIndex === activeSuggestionIndex;
+      option.classList.toggle("is-active", active);
+      option.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    if (input) {
+      if (activeSuggestionIndex < 0) input.removeAttribute("aria-activedescendant");
+      else {
+        input.setAttribute("aria-activedescendant", options[activeSuggestionIndex].id);
+        if (typeof options[activeSuggestionIndex].scrollIntoView === "function") {
+          options[activeSuggestionIndex].scrollIntoView({ block: "nearest" });
+        }
+      }
+    }
+  }
+
+  function renderCatalogSuggestions(localMatches, query, loading) {
+    var panel = document.getElementById("catalog-suggestions");
+    var optionsEl = document.getElementById("catalog-suggestion-options");
+    var statusEl = document.getElementById("catalog-suggestions-status");
+    var input = document.getElementById("hero-compound-input");
+    if (!panel || !optionsEl || !statusEl || !input) return;
+    var searchPage = document.querySelector('[data-page="search"]');
+    if (searchPage && searchPage.hidden) {
+      closeCatalogSuggestions();
+      return;
+    }
+    var cleanQuery = String(query || "").trim();
+    if (!cleanQuery) {
+      optionsEl.innerHTML = "";
+      statusEl.textContent = "";
+      closeCatalogSuggestions();
+      return;
+    }
+
+    var options = [];
+    if (cleanQuery.length >= 2) {
+      localMatches.slice(0, 8).forEach(function (item) {
+        options.push(renderCatalogSuggestionButton("local", null, item.id, item.name, item.classLabel, "Curated"));
+      });
+      catalogSearch.pubchem.slice(0, 6).forEach(function (item, index) {
+        options.push(renderCatalogSuggestionButton("pubchem", index, null, item.name, "Chemical identity · open PubChem detail", "PubChem"));
+      });
+      catalogSearch.rxnorm.slice(0, 6).forEach(function (item, index) {
+        options.push(renderCatalogSuggestionButton("rxnorm", index, null, item.name, rxNormTypeLabel(item.tty), "RxNorm"));
+      });
+    }
+    optionsEl.innerHTML = options.join("");
+    activeSuggestionIndex = -1;
+    input.removeAttribute("aria-activedescendant");
+    panel.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    var unavailableSources = [];
+    if (catalogSearch.pubchemError) unavailableSources.push("PubChem");
+    if (catalogSearch.rxnormError) unavailableSources.push("RxNorm");
+
+    if (cleanQuery.length < 2) {
+      statusEl.textContent = "Type one more character to see compound and medicine suggestions.";
+    } else if (loading) {
+      statusEl.textContent = options.length ? "Searching PubChem and RxNorm for more options…" : "Searching PubChem and RxNorm…";
+    } else if (options.length) {
+      statusEl.textContent = options.length + " suggestions · use the arrow keys or select one to open its page." +
+        (unavailableSources.length ? " " + unavailableSources.join(" and ") + (unavailableSources.length === 1 ? " is" : " are") + " unavailable." : "");
+    } else if (unavailableSources.length) {
+      var searchUrl = "https://pubchem.ncbi.nlm.nih.gov/#query=" + encodeURIComponent(cleanQuery);
+      statusEl.innerHTML = unavailableSources.join(" and ") + " suggestions are unavailable. <a href=\"" + escapeHtml(searchUrl) +
+        "\" target=\"_blank\" rel=\"noopener noreferrer\">Search PubChem directly ↗</a>";
+    } else {
+      statusEl.textContent = "No matches yet. Try a generic name, brand, synonym, or PubChem CID.";
+    }
+  }
+
+  function openCatalogResult(button) {
+    if (!button) return;
+    var source = button.getAttribute("data-result-source");
+    closeCatalogSuggestions();
+    if (source === "local") {
+      var localItem = DATA.monographs.find(function (item) { return item.id === button.getAttribute("data-result-id"); });
+      if (localItem) window.location.hash = makeDrugRoute("local", localItem);
+    } else if (source === "pubchem") {
+      var pubchemItem = catalogSearch.pubchem[parseInt(button.getAttribute("data-result-index"), 10)];
+      if (pubchemItem) window.location.hash = makeDrugRoute("pubchem", pubchemItem);
+    } else if (source === "rxnorm") {
+      var rxnormItem = catalogSearch.rxnorm[parseInt(button.getAttribute("data-result-index"), 10)];
+      if (rxnormItem) window.location.hash = makeDrugRoute("rxnorm", rxnormItem);
+    }
+  }
+
   function renderCatalogResults(localMatches, query, loading) {
     var resultsEl = document.getElementById("catalog-results");
     if (!resultsEl) return;
@@ -623,12 +740,12 @@
       catalogSearch.rxnormError = responses[1].error;
       var localMatches = localMonographMatches(query.toLowerCase());
       renderCatalogResults(localMatches, query, false);
+      renderCatalogSuggestions(localMatches, query, false);
       updateCatalogStatus(localMatches.length, false);
     });
   }
 
   function handleCompoundQuery(query) {
-    var input = document.getElementById("hero-compound-input");
     var cleanQuery = String(query || "").trim();
     catalogSearch.query = cleanQuery;
     catalogSearch.requestId += 1;
@@ -642,20 +759,23 @@
     catalogSearch.pubchemError = false;
     catalogSearch.rxnormError = false;
 
-    var localMatches = localMonographMatches(cleanQuery.toLowerCase());
+    var localMatches = cleanQuery.length >= 2 ? localMonographMatches(cleanQuery.toLowerCase()) : [];
     if (!cleanQuery) {
       renderCatalogResults([], "", false);
+      renderCatalogSuggestions([], "", false);
       updateCatalogStatus(0, false);
       return;
     }
 
     if (cleanQuery.length < 2) {
       renderCatalogResults(localMatches, cleanQuery, false);
+      renderCatalogSuggestions(localMatches, cleanQuery, false);
       updateCatalogStatus(localMatches.length, false);
       return;
     }
 
     renderCatalogResults(localMatches, cleanQuery, true);
+    renderCatalogSuggestions(localMatches, cleanQuery, true);
     updateCatalogStatus(localMatches.length, true);
     catalogSearch.timer = window.setTimeout(function () {
       runCatalogSearch(cleanQuery, requestId);
@@ -917,15 +1037,39 @@
     var input = document.getElementById("hero-compound-input");
     var clearButton = document.getElementById("clear-compound-search");
     var results = document.getElementById("catalog-results");
+    var suggestions = document.getElementById("catalog-suggestions");
+    var autocomplete = document.getElementById("catalog-autocomplete");
     var chips = document.getElementById("hero-compound-chips");
-    if (!input || !results) return;
+    if (!input || !results || !suggestions) return;
 
     renderHeroChips();
     renderCatalogResults([], "", false);
+    renderCatalogSuggestions([], "", false);
     updateCatalogStatus(0, false);
 
     input.addEventListener("input", function () {
       handleCompoundQuery(input.value);
+    });
+
+    input.addEventListener("focus", function () {
+      if (!input.value.trim()) return;
+      renderCatalogSuggestions(localMonographMatches(input.value.trim().toLowerCase()), input.value, false);
+    });
+
+    input.addEventListener("keydown", function (event) {
+      var optionButtons = Array.prototype.slice.call(document.querySelectorAll("#catalog-suggestion-options .catalog-suggestion"));
+      if (event.key === "ArrowDown" && !suggestions.hidden && optionButtons.length) {
+        event.preventDefault();
+        setActiveCatalogSuggestion(activeSuggestionIndex < 0 ? 0 : Math.min(activeSuggestionIndex + 1, optionButtons.length - 1));
+      } else if (event.key === "ArrowUp" && !suggestions.hidden && optionButtons.length) {
+        event.preventDefault();
+        setActiveCatalogSuggestion(activeSuggestionIndex < 0 ? optionButtons.length - 1 : Math.max(activeSuggestionIndex - 1, 0));
+      } else if (event.key === "Enter" && !suggestions.hidden && activeSuggestionIndex >= 0 && optionButtons[activeSuggestionIndex]) {
+        event.preventDefault();
+        openCatalogResult(optionButtons[activeSuggestionIndex]);
+      } else if (event.key === "Escape") {
+        closeCatalogSuggestions();
+      }
     });
 
     if (clearButton) {
@@ -949,21 +1093,18 @@
       });
     }
 
-    results.addEventListener("click", function (event) {
+    function handleCatalogOptionClick(event) {
       var button = event.target.closest("[data-result-source]");
-      if (!button) return;
-      var source = button.getAttribute("data-result-source");
-      if (source === "local") {
-        var localItem = DATA.monographs.find(function (item) { return item.id === button.getAttribute("data-result-id"); });
-        if (localItem) window.location.hash = makeDrugRoute("local", localItem);
-      } else if (source === "pubchem") {
-        var pubchemItem = catalogSearch.pubchem[parseInt(button.getAttribute("data-result-index"), 10)];
-        if (pubchemItem) window.location.hash = makeDrugRoute("pubchem", pubchemItem);
-      } else if (source === "rxnorm") {
-        var rxnormItem = catalogSearch.rxnorm[parseInt(button.getAttribute("data-result-index"), 10)];
-        if (rxnormItem) window.location.hash = makeDrugRoute("rxnorm", rxnormItem);
-      }
-    });
+      if (button) openCatalogResult(button);
+    }
+
+    results.addEventListener("click", handleCatalogOptionClick);
+    suggestions.addEventListener("click", handleCatalogOptionClick);
+    if (autocomplete) {
+      document.addEventListener("click", function (event) {
+        if (!autocomplete.contains(event.target)) closeCatalogSuggestions();
+      });
+    }
   }
 
   /* ------------------------------------------------------------------------

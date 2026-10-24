@@ -88,27 +88,36 @@
 
         <div class="search-console">
           <label class="compound-search-label" for="hero-compound-input">Compound, drug, synonym, or PubChem CID</label>
-          <div class="compound-search-row">
-            <div class="clinical-input-wrap">
-              <svg class="input-icon-left" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8" />
-                <line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
-              <input
-                type="search"
-                id="hero-compound-input"
-                class="clinical-input clinical-input-has-icon compound-search-input"
-                placeholder="Try aspirin, semaglutide, metformin, or a PubChem CID…"
-                autocomplete="off"
-                spellcheck="false"
-                aria-label="Search compounds and drugs"
-                aria-controls="catalog-results"
-              />
+          <div class="catalog-autocomplete" id="catalog-autocomplete">
+            <div class="compound-search-row">
+              <div class="clinical-input-wrap">
+                <svg class="input-icon-left" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8" />
+                  <line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                <input
+                  type="search"
+                  id="hero-compound-input"
+                  class="clinical-input clinical-input-has-icon compound-search-input"
+                  placeholder="Try aspirin, semaglutide, metformin, or a PubChem CID…"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-label="Search compounds and drugs"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="catalog-suggestion-options"
+                />
+              </div>
+              <button type="button" class="btn btn-outline-dark clear-search-btn" id="clear-compound-search">Clear</button>
             </div>
-            <button type="button" class="btn btn-outline-dark clear-search-btn" id="clear-compound-search">Clear</button>
+            <div class="catalog-suggestions" id="catalog-suggestions" hidden>
+              <div class="catalog-suggestion-options" id="catalog-suggestion-options" role="listbox" aria-label="Search suggestions"></div>
+              <div class="catalog-suggestions-status" id="catalog-suggestions-status" role="status" aria-live="polite"></div>
+            </div>
           </div>
           <p class="search-help">
-            Live queries go directly to PubChem and RxNorm (U.S. drug terminology); opening a record may also request PubChem properties, structure images, and openFDA label data. Catalogs are not exhaustive, and Pharmawiki does not save search history.
+            Suggestions appear as you type; live catalog lookups begin after two characters and go directly to PubChem and RxNorm. Opening a record may also request PubChem properties, structure images, and openFDA label data. Catalogs are not exhaustive, and Pharmawiki does not save search history.
           </p>
           <div class="quick-search-row">
             <span class="quick-search-label">Quick lookups</span>
