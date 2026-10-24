@@ -91,6 +91,9 @@
   var detailRequestId = 0;
   var currentDrugFacts = [];
   var currentDrugContext = null;
+  var currentDrugLabelEvidence = null;
+  var aiReviewRequestId = { drug: 0, stack: 0 };
+  var aiReviewStackSignature = null;
   var activeDrugTab = "compound";
   var drugDetailTabsInitialized = false;
 
@@ -159,6 +162,10 @@
 
   function resetDrugPage(name, source, subtitle) {
     detailRequestId += 1;
+    aiReviewRequestId.drug += 1;
+    aiReviewRequestId.stack += 1;
+    currentDrugLabelEvidence = null;
+    if (window.PharmawikiAIReview) window.PharmawikiAIReview.reset();
     var token = detailRequestId;
     var monograph = findMonographForName(name || "");
     currentDrugContext = {
@@ -713,6 +720,47 @@
     }).filter(Boolean).slice(0, 4);
   }
 
+  function openFdaRecordMatchScore(record, name) {
+    var wanted = normalizedName(name).replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).filter(Boolean);
+    if (!wanted.length) return 0;
+    var openfda = record && record.openfda || {};
+    var terms = [].concat(openfda.generic_name || [], openfda.brand_name || []);
+    return terms.reduce(function (best, value) {
+      var term = normalizedName(value).replace(/[^a-z0-9]+/g, " ").trim();
+      if (!term) return best;
+      var termWords = term.split(/\s+/).filter(Boolean);
+      if (!termWords.length) return best;
+      if (term === wanted.join(" ")) return Math.max(best, 3);
+      var matchingWords = termWords.filter(function (word) { return word.length >= 5 && wanted.indexOf(word) !== -1; }).length;
+      return Math.max(best, matchingWords ? 1 : 0);
+    }, 0);
+  }
+
+  function buildOpenFdaEvidence(name, url, record) {
+    var openfda = record && record.openfda || {};
+    function excerpts(key) {
+      return labelValue(record, key).slice(0, 3).map(function (value) {
+        return value.length > 1800 ? value.slice(0, 1800) + "… [excerpt]" : value;
+      });
+    }
+    return {
+      name: name,
+      title: "Matched openFDA drug label for " + name,
+      url: url,
+      revision: record && record.effective_time || "",
+      genericNames: [].concat(openfda.generic_name || []).filter(Boolean).slice(0, 4),
+      brandNames: [].concat(openfda.brand_name || []).filter(Boolean).slice(0, 4),
+      sections: {
+        indications: excerpts("indications_and_usage"),
+        adverseReactions: excerpts("adverse_reactions"),
+        boxedWarnings: excerpts("boxed_warning"),
+        warnings: excerpts("warnings_and_cautions").concat(excerpts("warnings")).slice(0, 4),
+        contraindications: excerpts("contraindications"),
+        interactions: excerpts("drug_interactions")
+      }
+    };
+  }
+
   function renderLabelField(id, values) {
     var element = document.getElementById(id);
     if (!element) return;
@@ -732,7 +780,10 @@
     if (grid) grid.hidden = true;
     if (state) state.textContent = url ? "Searching openFDA label records…" : "No U.S. FDA drug-label match is expected for this supplement or substance.";
     if (link) link.hidden = true;
-    if (!url) return;
+    if (!url) {
+      currentDrugLabelEvidence = null;
+      return;
+    }
     var controller = typeof window.AbortController === "function" ? new window.AbortController() : null;
     var timeout = controller ? window.setTimeout(function () { controller.abort(); }, 10000) : null;
 
@@ -741,15 +792,12 @@
       if (requestId !== detailRequestId) return;
       var records = payload && Array.isArray(payload.results) ? payload.results : [];
       if (!records.length) throw new Error("No FDA label found");
-      var wanted = normalizedName(name);
       records.sort(function (a, b) {
-        function score(record) {
-          var terms = [].concat(record.openfda && record.openfda.generic_name || [], record.openfda && record.openfda.brand_name || []);
-          return terms.some(function (value) { return normalizedName(value).indexOf(wanted) !== -1 || wanted.indexOf(normalizedName(value)) !== -1; }) ? 1 : 0;
-        }
-        return score(b) - score(a);
+        return openFdaRecordMatchScore(b, name) - openFdaRecordMatchScore(a, name);
       });
       var record = records[0];
+      if (!record || openFdaRecordMatchScore(record, name) === 0) throw new Error("No closely matching FDA label found");
+      currentDrugLabelEvidence = buildOpenFdaEvidence(name, url, record);
       renderLabelField("drug-label-indications", labelValue(record, "indications_and_usage"));
       renderLabelField("drug-label-adverse", labelValue(record, "adverse_reactions"));
       renderLabelField("drug-label-warnings", labelValue(record, "boxed_warning").concat(labelValue(record, "warnings_and_cautions")).concat(labelValue(record, "warnings")));
@@ -789,8 +837,187 @@
     }).catch(function () {
       if (timeout) window.clearTimeout(timeout);
       if (requestId !== detailRequestId) return;
+      currentDrugLabelEvidence = null;
       if (grid) grid.hidden = true;
       if (state) state.textContent = "No matching U.S. FDA label could be loaded. This may be a supplement, a non-U.S. product, or an unavailable record; try the DailyMed search below.";
+    });
+  }
+
+  function buildCuratedAISources(monograph, name) {
+    if (!monograph) return [];
+    var targetName = normalizedName(monograph.name || name);
+    var claims = (Array.isArray(monograph.claims) ? monograph.claims : []).slice();
+    (DATA.studyClaims || []).forEach(function (claim) {
+      var compound = normalizedName(claim.compound || "");
+      if (targetName && compound.indexOf(targetName) !== -1) claims.push(claim);
+    });
+    var seen = {};
+    return claims.filter(function (claim) {
+      if (!claim || !claim.pmid || seen[claim.pmid]) return false;
+      seen[claim.pmid] = true;
+      return true;
+    }).slice(0, 7).map(function (claim, index) {
+      var summary = [claim.claim || claim.endpoint, claim.effect, claim.cohort || claim.model, claim.grade ? "Evidence grade " + claim.grade : ""]
+        .filter(Boolean).join(". ");
+      return {
+        id: "curated-pubmed-" + index,
+        title: "Pharmawiki curated evidence summary · PMID " + claim.pmid,
+        url: pubmedUrl(claim.pmid),
+        excerpt: summary.slice(0, 1800)
+      };
+    });
+  }
+
+  function aiLabelSource(evidence, index) {
+    if (!evidence) return null;
+    var sections = evidence.sections || {};
+    var metadata = [
+      "Requested record: " + String(evidence.name || ""),
+      evidence.genericNames && evidence.genericNames.length ? "Matched generic name(s): " + evidence.genericNames.join(" / ") : "",
+      evidence.brandNames && evidence.brandNames.length ? "Matched brand example(s): " + evidence.brandNames.join(" / ") : "",
+      evidence.revision ? "Label revision date: " + evidence.revision : ""
+    ].filter(Boolean);
+    var sectionsText = [
+      ["Indications and use", sections.indications],
+      ["Reported adverse reactions", sections.adverseReactions],
+      ["Boxed warnings", sections.boxedWarnings],
+      ["Warnings and cautions", sections.warnings],
+      ["Contraindications", sections.contraindications],
+      ["Drug interactions", sections.interactions]
+    ].filter(function (row) { return Array.isArray(row[1]) && row[1].length; }).map(function (row) {
+      return row[0] + ": " + row[1].join(" ");
+    });
+    var excerpt = metadata.concat(sectionsText).join("\n\n");
+    if (!excerpt) return null;
+    return {
+      id: "openfda-label-" + index,
+      title: evidence.title || "Matched openFDA label for " + evidence.name,
+      url: evidence.url,
+      excerpt: excerpt.slice(0, 4500)
+    };
+  }
+
+  function fetchOpenFdaEvidenceForAI(name) {
+    var url = labelSearchUrl(name);
+    if (!url) return Promise.resolve(null);
+    if (currentDrugLabelEvidence && currentDrugContext && normalizedName(currentDrugContext.name) === normalizedName(name) &&
+        openFdaRecordMatchScore({ openfda: { generic_name: currentDrugLabelEvidence.genericNames, brand_name: currentDrugLabelEvidence.brandNames } }, name) > 0) {
+      return Promise.resolve(currentDrugLabelEvidence);
+    }
+    var controller = typeof window.AbortController === "function" ? new window.AbortController() : null;
+    var timeout = controller ? window.setTimeout(function () { controller.abort(); }, 10000) : null;
+    return fetchJson(url, controller ? controller.signal : null).then(function (payload) {
+      if (timeout) window.clearTimeout(timeout);
+      var records = payload && Array.isArray(payload.results) ? payload.results : [];
+      if (!records.length) return null;
+      records.sort(function (a, b) {
+        return openFdaRecordMatchScore(b, name) - openFdaRecordMatchScore(a, name);
+      });
+      if (!records[0] || openFdaRecordMatchScore(records[0], name) === 0) return null;
+      return buildOpenFdaEvidence(name, url, records[0]);
+    }).catch(function () {
+      if (timeout) window.clearTimeout(timeout);
+      return null;
+    });
+  }
+
+  function buildDrugAIReviewPayload(labelEvidence) {
+    var context = currentDrugContext || {};
+    var sources = [];
+    var labelSource = aiLabelSource(labelEvidence, 0);
+    if (labelSource) sources.push(labelSource);
+    sources = sources.concat(buildCuratedAISources(context.monograph, context.name));
+    return {
+      drug: {
+        name: context.name || "",
+        catalogSource: context.source || "",
+        brand: context.brand || "",
+        productForm: context.form || "",
+        facts: currentDrugFacts.slice(0, 12).map(function (fact) {
+          return { label: String(fact.label || "").slice(0, 100), value: String(fact.value || "").slice(0, 240) };
+        })
+      },
+      sources: sources
+    };
+  }
+
+  function requestDrugAIReview() {
+    if (!currentDrugContext || !window.PharmawikiAIReview) return;
+    var name = currentDrugContext.name;
+    var requestId = ++aiReviewRequestId.drug;
+    var button = document.getElementById("run-ai-review-btn");
+    if (button) button.disabled = true;
+    window.PharmawikiAIReview.setStatus("drug", "Checking for a current public drug label before sending the review…", "loading");
+    fetchOpenFdaEvidenceForAI(name).then(function (labelEvidence) {
+      if (requestId !== aiReviewRequestId.drug || !currentDrugContext || normalizedName(currentDrugContext.name) !== normalizedName(name)) return;
+      if (button) button.disabled = false;
+      window.PharmawikiAIReview.run("drug", buildDrugAIReviewPayload(labelEvidence));
+    });
+  }
+
+  function buildStackAIReviewPayload(labelEvidenceRows) {
+    var sources = [];
+    var items = stackCart.slice(0, 6).map(function (item, index) {
+      var model = item.modelId && DATA.stackChecker.compounds.find(function (compound) { return compound.id === item.modelId; });
+      var labelEvidence = labelEvidenceRows[index] || null;
+      var labelSource = aiLabelSource(labelEvidence, index);
+      if (labelSource) sources.push(labelSource);
+      return {
+        name: String(item.name || "").slice(0, 120),
+        localReferenceMatch: Boolean(model),
+        localReferenceName: model ? model.name : ""
+      };
+    });
+    var modelIds = stackCart.map(function (item) { return item.modelId; }).filter(function (id, index, ids) {
+      return id && DATA.stackChecker.compounds.some(function (compound) { return compound.id === id; }) && ids.indexOf(id) === index;
+    });
+    var matchedRules = [];
+    if (modelIds.length >= 2) {
+      var result = evaluateStackRisk(computeActiveSubgraph(modelIds), modelIds);
+      matchedRules = (result && result.matchedRules || []).slice(0, 5);
+    }
+    var knownRules = matchedRules.map(function (rule, index) {
+      var sourceId = "bundled-rule-" + index;
+      var excerpt = [rule.title, rule.detail, rule.severity ? "Bundled severity label: " + rule.severity : ""].filter(Boolean).join(". ");
+      if (rule.pmid) sources.push({
+        id: sourceId,
+        title: "Pharmawiki bundled rule excerpt · verify PMID " + rule.pmid,
+        url: pubmedUrl(rule.pmid),
+        excerpt: excerpt.slice(0, 1000)
+      });
+      return { title: rule.title, severity: rule.severity || "", detail: rule.detail || "", sourceId: rule.pmid ? sourceId : "" };
+    });
+    return {
+      stack: { items: items, bundledRules: knownRules },
+      sources: sources.slice(0, 20)
+    };
+  }
+
+  function requestStackAIReview() {
+    if (!window.PharmawikiAIReview) return;
+    if (stackCart.length < 2) {
+      showToast("Add at least two items to your stack before requesting an interaction review.");
+      return;
+    }
+    if (stackCart.length > 6) {
+      showToast("AI stack review currently supports up to six selected items at once.");
+      return;
+    }
+    var names = stackCart.map(function (item) { return item.name; });
+    var requestId = ++aiReviewRequestId.stack;
+    var button = document.getElementById("run-ai-stack-review-btn");
+    if (button) button.disabled = true;
+    window.PharmawikiAIReview.setStatus("stack", "Checking public label records for the selected stack…", "loading");
+    Promise.all(names.map(fetchOpenFdaEvidenceForAI)).then(function (evidenceRows) {
+      var currentNames = stackCart.map(function (item) { return item.name; });
+      if (requestId !== aiReviewRequestId.stack) return;
+      if (currentNames.join("\u0000") !== names.join("\u0000")) {
+        if (button) button.disabled = false;
+        window.PharmawikiAIReview.setStatus("stack", "The stack changed while sources were loading. Review the current items and try again.", "error");
+        return;
+      }
+      if (button) button.disabled = false;
+      window.PharmawikiAIReview.run("stack", buildStackAIReviewPayload(evidenceRows));
     });
   }
 
@@ -963,6 +1190,11 @@
       setActiveDrugTab(tabButtons[index].getAttribute("data-drug-tab"));
       tabButtons[index].focus();
     });
+
+    var aiDrugButton = document.getElementById("run-ai-review-btn");
+    if (aiDrugButton) aiDrugButton.addEventListener("click", requestDrugAIReview);
+    var aiStackButton = document.getElementById("run-ai-stack-review-btn");
+    if (aiStackButton) aiStackButton.addEventListener("click", requestStackAIReview);
 
     var copyButton = document.getElementById("copy-drug-link");
     if (copyButton) copyButton.addEventListener("click", function () {
@@ -1810,6 +2042,12 @@
     var meter = document.getElementById("drug-stack-meter");
     var caption = document.getElementById("drug-stack-meter-caption");
     var feedback = document.getElementById("drug-stack-feedback");
+    var stackSignature = stackCart.map(function (item) { return item.name; }).join("\u0000");
+    if (stackSignature !== aiReviewStackSignature) {
+      aiReviewStackSignature = stackSignature;
+      aiReviewRequestId.stack += 1;
+      if (window.PharmawikiAIReview && window.PharmawikiAIReview.resetKind) window.PharmawikiAIReview.resetKind("stack");
+    }
     if (!list || !currentDrugContext) return;
 
     var currentIndex = findStackCartIndex(currentDrugContext.name);

@@ -1,0 +1,10 @@
+# Cloudflare Worker credentials and local development state
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+.wrangler/
+
+# Local JavaScript dependencies
+node_modules/

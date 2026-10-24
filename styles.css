@@ -3654,6 +3654,215 @@ select:focus-visible,
   }
 }
 
+.drug-ai-review-card {
+  min-width: 0;
+  padding: 0 16px 16px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--stone-line-strong);
+  border-radius: var(--radius-md);
+}
+
+.drug-ai-review-card > .module-bar {
+  min-height: 48px;
+  margin: 0 -16px 14px;
+}
+
+.drug-ai-review-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.drug-ai-review-intro > p,
+.drug-ai-review-description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.drug-ai-review-intro .btn,
+.drug-stack-ai-review > .btn {
+  flex: 0 0 auto;
+}
+
+.drug-ai-review-card .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ai-review-privacy-note {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.ai-review-status {
+  margin-top: 12px;
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  background: var(--bg-canvas);
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.ai-review-status.is-loading {
+  border-color: var(--action-blue);
+}
+
+.ai-review-status.is-success {
+  border-color: var(--signal-ok);
+}
+
+.ai-review-status.is-error {
+  color: var(--signal-alert);
+  border-color: var(--signal-alert);
+}
+
+.ai-review-result:not([hidden]) {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.ai-review-result-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--stone-line);
+}
+
+.ai-review-result-heading h3 {
+  margin: 0;
+  font-size: 0.83rem;
+}
+
+.ai-review-generated-label {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.61rem;
+  text-align: right;
+}
+
+.ai-review-section {
+  display: grid;
+  gap: 8px;
+}
+
+.ai-review-section h4 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.ai-review-finding {
+  padding: 10px 12px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius-xs);
+}
+
+.ai-review-finding-text {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.ai-review-finding-basis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.63rem;
+  line-height: 1.5;
+}
+
+.ai-review-source-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ai-review-source-links a {
+  color: var(--action-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ai-review-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.ai-review-assessment {
+  padding: 11px 12px;
+  background: color-mix(in srgb, var(--signal-watch) 10%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--signal-watch) 45%, var(--stone-line));
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.ai-review-assessment strong {
+  display: block;
+}
+
+.ai-review-confidence {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+}
+
+.ai-review-limitations {
+  margin: 0;
+  padding-left: 19px;
+  color: var(--text-muted);
+  font-size: 0.67rem;
+  line-height: 1.55;
+}
+
+.drug-stack-ai-review {
+  margin-top: 16px;
+}
+
+.drug-stack-ai-review > .btn {
+  margin-top: 12px;
+}
+
+@media (max-width: 680px) {
+  .drug-ai-review-intro {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .drug-ai-review-intro .btn,
+  .drug-stack-ai-review > .btn {
+    width: 100%;
+  }
+
+  .ai-review-result-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ai-review-generated-label {
+    text-align: left;
+  }
+}
+
 @media print {
   .site-header,
   .drug-page-toolbar,

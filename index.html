@@ -212,6 +212,20 @@
                 </div>
               </section>
 
+              <section class="drug-info-card drug-ai-review-card" aria-labelledby="drug-ai-review-heading">
+                <div class="module-bar">
+                  <h2 class="module-bar-title" id="drug-ai-review-heading">AI evidence review</h2>
+                  <span class="overview-origin-label" id="ai-review-connection-badge">Not connected</span>
+                </div>
+                <div class="drug-ai-review-intro">
+                  <p>On demand, an AI model can summarize the selected record and available public source excerpts. It may be wrong; it cannot diagnose or certify a drug as safe.</p>
+                  <button type="button" class="btn btn-primary btn-sm" id="run-ai-review-btn" disabled>Generate AI review</button>
+                </div>
+                <p class="ai-review-privacy-note">A review sends the medicine name and available public label/reference excerpts to the configured AI backend. Do not enter personal health information.</p>
+                <div class="ai-review-status" id="ai-review-status" role="status" aria-live="polite">Live AI is not configured for this site.</div>
+                <div class="ai-review-result" id="ai-review-result" role="region" aria-label="AI-generated evidence review results" tabindex="-1" hidden></div>
+              </section>
+
               <section class="drug-info-card" aria-labelledby="curated-pharmacology-heading">
                 <div class="module-bar">
                   <h2 class="module-bar-title" id="curated-pharmacology-heading">Pharmacology &amp; curated evidence</h2>
@@ -335,6 +349,17 @@
               <div class="drug-stack-feedback" id="drug-stack-feedback" aria-live="polite"></div>
             </aside>
           </div>
+          <section class="drug-ai-review-card drug-stack-ai-review" aria-labelledby="stack-ai-review-heading">
+            <div class="module-bar">
+              <h3 class="module-bar-title" id="stack-ai-review-heading">AI interaction review</h3>
+              <span class="overview-origin-label">Evidence-limited</span>
+            </div>
+            <p class="drug-ai-review-description">Ask the configured model to review this stack against available public label excerpts and the bundled interaction references. It may miss interactions and cannot determine that a stack is safe.</p>
+            <button type="button" class="btn btn-primary btn-sm" id="run-ai-stack-review-btn" disabled>Review stack with AI</button>
+            <p class="ai-review-privacy-note">The request sends the selected item names and retrieved public reference excerpts. Do not include personal health information.</p>
+            <div class="ai-review-status" id="ai-stack-review-status" role="status" aria-live="polite">Live AI is not configured for this site.</div>
+            <div class="ai-review-result" id="ai-stack-review-result" role="region" aria-label="AI-generated stack interaction review results" tabindex="-1" hidden></div>
+          </section>
           <p class="drug-panel-caveat">This rule-based reference index is not individualized, exhaustive, or clinically validated as a risk score. A low or absent signal does not mean a combination is safe. Check a pharmacist or prescriber before changing medicines.</p>
           <div class="drug-panel-actions"><a class="btn btn-outline-dark btn-sm" href="#pathways" id="open-pathway-stack">Open full pathway map →</a><a class="btn btn-outline-dark btn-sm" href="#protocol">Open local protocol log →</a></div>
         </section>
@@ -921,6 +946,8 @@
   <div class="clinical-toast" id="clinical-toast" role="status" aria-live="polite"></div>
 
   <script src="./data.js"></script>
+  <script src="./ai-config.js"></script>
+  <script src="./ai-review.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
