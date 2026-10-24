@@ -1,13 +1,13 @@
 /* ==========================================================================
-   Pharmapedia Open-Source Research Dataset (v2.5.0)
+   Pharmawiki Open-Source Research Dataset (v2.5.0)
    License: MIT — Local curated dossiers and evidence records
    Primary Provenance: PubMed / MEDLINE, NCBI Gene, PubChem, ChEMBL, IUPHAR/BPS,
    Allen Human Brain Atlas (mRNA z-scores)
    ========================================================================== */
 
-window.PHARMAPEDIA_DATA = {
+window.PHARMAWIKI_DATA = {
   meta: {
-    name: "Pharmapedia Open Research Library",
+    name: "Pharmawiki Open Research Library",
     version: "2.5.0-open",
     license: "MIT",
     updated: "2026-10",
@@ -207,7 +207,7 @@ window.PHARMAPEDIA_DATA = {
           pmid: "26519439"
         }
       ],
-      clinicalNote: "Exemplifies Pharmapedia's evidence separation: robust hippocampal plasticity data originates from rodent CSF sampling (Grade C), whereas independent large-scale human lumbar-puncture CSF superiority trials over magnesium glycinate/citrate remain absent."
+      clinicalNote: "Exemplifies Pharmawiki's evidence separation: robust hippocampal plasticity data originates from rodent CSF sampling (Grade C), whereas independent large-scale human lumbar-puncture CSF superiority trials over magnesium glycinate/citrate remain absent."
     },
     {
       id: "cdp-choline",
@@ -247,7 +247,7 @@ window.PHARMAPEDIA_DATA = {
           pmid: "15846619"
         }
       ],
-      clinicalNote: "In humans, oral cytidine converts primarily to circulating uridine before crossing the BBB via concentrative nucleoside transporters. Pharmapedia surfaces the large ICTUS null stroke trial alongside smaller cognitive trials to prevent survivorship bias."
+      clinicalNote: "In humans, oral cytidine converts primarily to circulating uridine before crossing the BBB via concentrative nucleoside transporters. Pharmawiki surfaces the large ICTUS null stroke trial alongside smaller cognitive trials to prevent survivorship bias."
     },
     {
       id: "nac",
@@ -1142,7 +1142,7 @@ window.PHARMAPEDIA_DATA = {
       {
         id: "magnesium-case",
         name: "Magnesium L-Threonate · Brain Mg2+ & Synaptic Density",
-        summary: "Shows why Pharmapedia distinguishes compelling rodent cisterna-magna CSF measurements (Grade C) from small pilot human questionnaires/tasks (Grade A-pilot).",
+        summary: "Shows why Pharmawiki distinguishes compelling rodent cisterna-magna CSF measurements (Grade C) from small pilot human questionnaires/tasks (Grade A-pilot).",
         rows: [
           { grade: "A", status: "Single Small Pilot RCT", detail: "One 12-week sponsor-backed trial (n = 44) reported modest executive composite improvements; independent large head-to-head RCTs vs Mg glycinate/citrate are not yet published.", metric: "n = 44 · Cohen's d = 0.42", pmid: "26519439" },
           { grade: "B", status: "Dietary Mg Intake Cohorts", detail: "Higher total dietary magnesium intake (~400 mg/d) correlates with larger hippocampal volumes in UK Biobank, independent of L-threonate chelation.", metric: "Dietary Mg total association", pmid: "36899275" },

@@ -1,14 +1,14 @@
 /* ==========================================================================
-   Pharmapedia Compound Search & Reference App (app.js)
+   Pharmawiki Compound Search & Reference App (app.js)
    Client-side vanilla JS; live catalog lookups go directly to PubChem and RxNorm.
    ========================================================================== */
 
 (function () {
   "use strict";
 
-  var DATA = window.PHARMAPEDIA_DATA;
+  var DATA = window.PHARMAWIKI_DATA;
   if (!DATA) {
-    console.error("Pharmapedia dataset (data.js) failed to load.");
+    console.error("Pharmawiki dataset (data.js) failed to load.");
     return;
   }
 
@@ -227,7 +227,7 @@
     var m = DATA.monographs.find(function (item) { return item.id === monographId; });
     if (!m) return;
 
-    var token = resetDrugPage(m.name, "Curated Pharmapedia monograph", m.classLabel);
+    var token = resetDrugPage(m.name, "Curated Pharmawiki monograph", m.classLabel);
     setText("drug-page-record-source", "Curated reference · local dataset");
     setText("dossier-source-label", "Curated profile");
     var cidLink = '<a href="' + pubchemUrl(m.pubchemCid) + '" target="_blank" rel="noopener noreferrer">CID:' + escapeHtml(m.pubchemCid) + '</a>';
@@ -2248,7 +2248,9 @@
   /* ------------------------------------------------------------------------
      6. Browser-Local Protocol Log
      ------------------------------------------------------------------------ */
-  var STORAGE_KEY = "pharmapedia_protocol_log_v1";
+  var STORAGE_KEY = "pharmawiki_protocol_log_v1";
+  // Migrate notes saved before the brand rename without losing browser-local data.
+  var LEGACY_STORAGE_KEY = "pharma" + "pedia_protocol_log_v1";
 
   var defaultProtocolEntries = [
     { name: "Rosuvastatin", dose: "10 mg", schedule: "PM Dinner", washout: "~95 h (5x t½)" },
@@ -2259,6 +2261,13 @@
   function loadProtocolEntries() {
     try {
       var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        raw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (raw) {
+          window.localStorage.setItem(STORAGE_KEY, raw);
+          window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+      }
       if (!raw) return defaultProtocolEntries.slice();
       var parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : defaultProtocolEntries.slice();
@@ -2323,8 +2332,8 @@
 
   function buildProtocolMarkdown() {
     var lines = [
-      "# Pharmapedia Clinical Regimen & Interaction Brief",
-      "Generated locally via Pharmapedia Open-Source Library (v" + DATA.meta.version + ")",
+      "# Pharmawiki Clinical Regimen & Interaction Brief",
+      "Generated locally via Pharmawiki Open-Source Library (v" + DATA.meta.version + ")",
       "Zero-telemetry client-side export · Verify all changes with a licensed clinician.",
       "",
       "## 1. Logged Protocol Regimen"
@@ -2448,8 +2457,8 @@
     if (exportMdBtn) {
       exportMdBtn.addEventListener("click", function () {
         var md = buildProtocolMarkdown();
-        triggerDownload("pharmapedia-clinical-brief.md", "text/markdown;charset=utf-8", md);
-        showToast("Downloaded pharmapedia-clinical-brief.md");
+        triggerDownload("pharmawiki-clinical-brief.md", "text/markdown;charset=utf-8", md);
+        showToast("Downloaded pharmawiki-clinical-brief.md");
       });
     }
 

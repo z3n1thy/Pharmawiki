@@ -1,6 +1,6 @@
-# Pharmapedia — Compound & Drug Search
+# Pharmawiki — Compound & Drug Search
 
-Pharmapedia is a search-first, static pharmacology reference. Start at the compound search to look up the locally curated dossiers or query public compound and medication catalogs. Selecting a result opens its own shareable hash-routed detail page; the study library, pathway map, atlas, evidence grading, and browser-local protocol log are separate routed views rather than one long page.
+Pharmawiki is a search-first, static pharmacology reference. Start at the compound search to look up the locally curated dossiers or query public compound and medication catalogs. Selecting a result opens its own shareable hash-routed detail page; the study library, pathway map, atlas, evidence grading, and browser-local protocol log are separate routed views rather than one long page.
 
 ## Search coverage
 
@@ -15,7 +15,7 @@ Each selected local, PubChem, or RxNorm result opens a separate route (for examp
 
 The “AI overview” heading is a human-readable summary, not a claim of live generation: curated text is bundled, and some external summaries are assembled from returned FDA-label text. This static app has no LLM backend or API key and does not generate individualized advice. U.S. FDA label sections (indications, adverse reactions, warnings, contraindications, and interactions) are requested from openFDA where a match is available. Labels differ by product, formulation, route, and revision; unmatched records and supplements may have no result. Use the linked official product information and DailyMed search to verify a specific medicine. A missing section or label match does not imply that no risk exists.
 
-Search terms are sent directly from the browser to PubChem and RxNorm to retrieve live matches. Opening a record can also request PubChem chemical properties/structure images and search openFDA for U.S. drug-label sections. Pharmapedia has no application server, analytics, or live AI/LLM backend; each external service may process requests under its own policies. The protocol log is stored in browser `localStorage`; do not enter patient-identifying information.
+Search terms are sent directly from the browser to PubChem and RxNorm to retrieve live matches. Opening a record can also request PubChem chemical properties/structure images and search openFDA for U.S. drug-label sections. Pharmawiki has no application server, analytics, or live AI/LLM backend; each external service may process requests under its own policies. The protocol log is stored in browser `localStorage`; do not enter patient-identifying information.
 
 ## Other modules
 
