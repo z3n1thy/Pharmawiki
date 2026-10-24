@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pharmapedia — Open-Source Clinical Research Library, Pathway Map &amp; Stack Checker</title>
+  <title>Pharmapedia — Compound &amp; Drug Search</title>
   <meta
     name="description"
-    content="Pharmapedia is a 100% free, open-source clinical research library for patients and healthcare professionals. Research compounds, map receptor and CYP pathways, inspect neuroanatomical density, and audit multi-compound stacks with strict 5-tier evidence grading."
+    content="Search curated compound dossiers alongside live PubChem compound and RxNorm drug records. Explore study evidence, pathway maps, and clinical reference data."
   />
   <meta name="theme-color" content="#0B0B0D" />
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
@@ -20,29 +20,12 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <a href="#main-content" class="skip-link">Skip to clinical dashboard</a>
+  <a href="#main-content" class="skip-link">Skip to compound search</a>
 
-  <!-- Top Clinical Provenance & Open-Source Status Strip -->
-  <div class="top-status-strip" role="region" aria-label="Open-source release status">
-    <div class="container top-status-inner">
-      <div class="status-cluster">
-        <span class="violet-brand-tag">MIT Open Source</span>
-        <span><span class="status-dot" aria-hidden="true"></span> Static GitHub Pages Edition · Zero Server · Zero Telemetry</span>
-        <span class="status-sep" aria-hidden="true">|</span>
-        <span class="tabular">Index Release: <strong>v2.4.0</strong> (PubMed · NCBI · PubChem · ChEMBL)</span>
-      </div>
-      <div class="status-cluster">
-        <span>100% Free Public Good</span>
-        <span class="status-sep" aria-hidden="true">·</span>
-        <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">Source &amp; Schema on GitHub →</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Minimal Product-Oriented Navigation Bar -->
+  <!-- Compact product navigation -->
   <header class="site-header">
     <div class="container nav-bar">
-      <a href="#top" class="brand-lockup" aria-label="Pharmapedia home">
+      <a href="#top" class="brand-lockup" aria-label="Pharmapedia compound search">
         <svg class="brand-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
           <rect width="64" height="64" rx="12" fill="#101115" />
           <rect x="1" y="1" width="62" height="62" rx="11" stroke="#CFC9BC" stroke-opacity="0.32" />
@@ -57,29 +40,21 @@
         </svg>
         <span>
           <span class="brand-wordmark">Pharmapedia</span>
-          <span class="brand-sub">Clinical Data Laboratory</span>
+          <span class="brand-sub">Compound reference</span>
         </span>
       </a>
 
       <nav class="primary-nav" id="primary-nav" aria-label="Primary sections">
-        <a href="#study-library">Study library</a>
-        <a href="#stack-checker">Pathway map</a>
-        <a href="#stack-checker">Stack checker</a>
+        <a href="#top" class="is-active">Search</a>
+        <a href="#study-library">Studies</a>
+        <a href="#stack-checker">Pathways</a>
         <a href="#brain-atlas">Brain atlas</a>
-        <a href="#evidence-grading">Evidence grading</a>
-        <a href="#protocol-log">Protocol log</a>
+        <a href="#evidence-grading">Evidence</a>
+        <a href="#protocol-log">Protocol</a>
       </nav>
 
       <div class="nav-actions">
-        <a
-          href="https://github.com/z3n1thy/Pharmawiki"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="nav-github-link"
-        >
-          GitHub Repository
-        </a>
-        <a href="#open-access" class="btn btn-primary btn-sm">Free Lifetime Access</a>
+        <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer" class="nav-github-link">Source</a>
         <button
           type="button"
           class="mobile-menu-toggle"
@@ -94,50 +69,26 @@
   </header>
 
   <main id="main-content">
-    <!-- ====================================================================
-         HERO SECTION: 66px Manrope Headline + Live Compound Monograph Dossier
-         ==================================================================== -->
-    <section class="hero-section" id="top">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <div class="eyebrow">
-            <span class="eyebrow-code">LAB // 00</span>
-            <span>For Patients, Clinicians &amp; Independent Researchers</span>
-          </div>
-
-          <h1 class="hero-headline">
-            <span>Research every compound.</span>
-            <span>Map every pathway.</span>
-            <span class="accent-clause">Check every stack.</span>
-          </h1>
-
-          <p class="hero-description">
-            A dark, source-transparent pharmacological reference library built to separate randomized human outcomes from preclinical noise. Cross-reference binding affinities, <strong>CYP450 phenoconversion</strong>, neuroanatomical target density, and multi-compound stack convergence across <strong>PubMed</strong>, <strong>NCBI</strong>, <strong>PubChem</strong>, and <strong>ChEMBL</strong>—100% free, open-source, and accessible directly from GitHub Pages.
-          </p>
-
-          <div class="hero-cta-group">
-            <a href="#open-access" class="btn btn-primary">
-              Get Free Lifetime Access — $0
-            </a>
-            <a href="#stack-checker" class="btn btn-secondary" id="see-in-action-btn">
-              See It in Action
-            </a>
-          </div>
-
-          <div class="hero-sub-links">
-            <a href="#evidence-grading">Inspect 5-tier evidence grading specification →</a>
-            <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">
-              Fork or self-host via GitHub Pages →
-            </a>
-            <span class="hero-trust-note">No account · No subscription · Local-only storage</span>
-          </div>
-
-          <!-- White Input Search Control (#FFFFFF surface, #171714 ink, #CFC9BC border, 12px radius) -->
-          <div class="hero-search-module" role="search" aria-label="Instant compound monograph lookup">
-            <div class="search-module-header">
-              <span>Live Monograph Query (Client-Side Index)</span>
-              <span class="tabular" id="hero-search-status">8 Reference Dossiers Loaded</span>
+    <!-- Search workspace: local dossiers plus live public catalog lookups -->
+    <section class="search-page" id="top" aria-labelledby="search-page-title">
+      <div class="container">
+        <div class="search-page-heading">
+          <div>
+            <div class="eyebrow">
+              <span class="eyebrow-code">CATALOG // 01</span>
+              <span>Compound &amp; medicine reference</span>
             </div>
+            <h1 class="search-page-title" id="search-page-title">Search compounds and drugs</h1>
+          </div>
+          <div class="catalog-scope-label">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>PubChem + RxNorm lookup</span>
+          </div>
+        </div>
+
+        <div class="search-console">
+          <label class="compound-search-label" for="hero-compound-input">Compound, drug, synonym, or PubChem CID</label>
+          <div class="compound-search-row">
             <div class="clinical-input-wrap">
               <svg class="input-icon-left" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8" />
@@ -146,69 +97,54 @@
               <input
                 type="search"
                 id="hero-compound-input"
-                class="clinical-input clinical-input-has-icon"
-                placeholder="Search compound, target gene, CYP enzyme, or PMID (e.g. Semaglutide, CYP2D6, SLC6A4, 37952131)…"
+                class="clinical-input clinical-input-has-icon compound-search-input"
+                placeholder="Try aspirin, semaglutide, metformin, or a PubChem CID…"
                 autocomplete="off"
-                aria-label="Search compound monograph"
+                spellcheck="false"
+                aria-label="Search compounds and drugs"
+                aria-controls="catalog-results"
               />
             </div>
-            <div class="compound-chip-row" id="hero-compound-chips" aria-label="Sample compounds">
+            <button type="button" class="btn btn-outline-dark clear-search-btn" id="clear-compound-search">Clear</button>
+          </div>
+          <p class="search-help">
+            Live queries go directly to PubChem and RxNorm (U.S. drug terminology); neither catalog is exhaustive. Pharmapedia does not save search history.
+          </p>
+          <div class="quick-search-row">
+            <span class="quick-search-label">Quick lookups</span>
+            <div class="compound-chip-row" id="hero-compound-chips" aria-label="Quick compound lookups">
               <!-- Populated by app.js -->
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Live Structured Compound Dossier -->
-        <aside class="dossier-card" aria-live="polite" aria-label="Selected compound monograph snapshot">
-          <div class="dossier-topbar">
-            <span>Module 01 // Compound Monograph</span>
-            <div class="dossier-topbar-ids" id="dossier-ids">
-              <!-- CID & ChEMBL -->
+        <div class="search-workbench">
+          <section class="catalog-panel" aria-labelledby="catalog-results-heading">
+            <div class="module-bar">
+              <span class="module-bar-title" id="catalog-results-heading">Search results</span>
+              <span class="catalog-result-count tabular" id="hero-search-status" role="status" aria-live="polite">8 curated dossiers · live search ready</span>
             </div>
-          </div>
-          <div class="dossier-body" id="dossier-body">
-            <!-- Populated dynamically by app.js -->
-          </div>
-        </aside>
-      </div>
-    </section>
+            <div class="catalog-results" id="catalog-results" aria-live="polite">
+              <div class="catalog-empty-state">
+                <h2>Start with a compound or medicine</h2>
+                <p>Type at least two characters to search PubChem and RxNorm. Select a result to see identifiers and available reference data.</p>
+              </div>
+            </div>
+          </section>
 
-    <!-- ====================================================================
-         BIG STATS & SOURCE PROVENANCE TELEMETRY BAND
-         ==================================================================== -->
-    <section class="stats-band" aria-label="Indexed biomedical dataset metrics">
-      <div class="container">
-        <div class="stats-grid">
-          <div class="stat-cell">
-            <span class="stat-kicker">01 / Chemical Entities</span>
-            <span class="stat-number tabular">4,820</span>
-            <span class="stat-label">Compounds &amp; Active Metabolites</span>
-            <span class="stat-source">PubChem · ChEMBL v34 · RxNorm</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">02 / Primary Literature</span>
-            <span class="stat-number tabular">142,680</span>
-            <span class="stat-label">Graded Clinical &amp; Preclinical Studies</span>
-            <span class="stat-source">PubMed · MEDLINE · ClinicalTrials.gov</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">03 / Signaling Topology</span>
-            <span class="stat-number tabular">1,194</span>
-            <span class="stat-label">Receptor, Enzyme &amp; Transporter Maps</span>
-            <span class="stat-source">IUPHAR/BPS · Reactome · NCBI Gene</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">04 / Interaction Edges</span>
-            <span class="stat-number tabular">38,410</span>
-            <span class="stat-label">Quantified PK / CYP / PD Linkages</span>
-            <span class="stat-source">FDA DDI Index · CPIC Guidelines</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-kicker">05 / Access Model</span>
-            <span class="stat-number tabular">$0 · MIT</span>
-            <span class="stat-label">100% Free &amp; Open-Source Forever</span>
-            <span class="stat-source">Static GitHub Pages · Offline Ready</span>
-          </div>
+          <aside class="dossier-card" aria-live="polite" aria-label="Selected compound or drug details">
+            <div class="dossier-topbar">
+              <span id="dossier-source-label">Record details</span>
+              <div class="dossier-topbar-ids" id="dossier-ids"></div>
+            </div>
+            <div class="dossier-body" id="dossier-body">
+              <div class="empty-detail-state">
+                <span class="empty-detail-mark" aria-hidden="true">⌕</span>
+                <h2>Select a search result</h2>
+                <p>Compound identifiers, chemical properties, or curated pharmacology details will appear here.</p>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
@@ -224,10 +160,10 @@
               <span class="eyebrow-code">MODULE // 02</span>
               <span>Study Library &amp; Quantified Outcome Ledger</span>
             </div>
-            <h2 class="section-heading">Every claim quantified, graded, and traced to primary data.</h2>
+            <h2 class="section-heading">Curated study summaries with source links and method notes.</h2>
           </div>
           <p class="section-lead">
-            Marketing pages summarize compounds with vague adjectives. Pharmapedia records exact effect sizes, confidence intervals, sample sizes, null Phase III trials, and allometric animal-to-human dose gaps—linked directly to verifiable PubMed records. Click any study row to inspect its methodological audit.
+            Browse the bundled evidence summaries, including effect sizes, cohort sizes, null findings, and study limitations where available. Open a row for its methodological notes and PubMed source.
           </p>
         </div>
 
@@ -616,7 +552,7 @@
     </section>
 
     <!-- ====================================================================
-         PROTOCOL LOG & 100% FREE OPEN-SOURCE GITHUB ACCESS
+         LOCAL PROTOCOL LOG
          ==================================================================== -->
     <section class="section-block" id="protocol-log">
       <div class="container">
@@ -624,12 +560,12 @@
           <div>
             <div class="eyebrow">
               <span class="eyebrow-code">MODULE // 06</span>
-              <span>Private Protocol Log &amp; Open-Source Lifetime Access</span>
+              <span>Private Protocol Log</span>
             </div>
-            <h2 class="section-heading">Zero paywalls. Zero cloud tracking. Run straight from GitHub.</h2>
+            <h2 class="section-heading">Keep regimen notes in this browser.</h2>
           </div>
           <p class="section-lead">
-            Pharmapedia is 100% free and open-source software (MIT License). Your protocol log stays strictly in your own browser's local memory—never sent to any server—and can be exported anytime as a clean Markdown clinical brief for physician review.
+            Protocol entries stay in this browser and can be exported as a Markdown brief. Compound searches are a separate feature: query text is sent directly to PubChem and RxNorm for live results.
           </p>
         </div>
 
@@ -637,8 +573,8 @@
           <!-- Left: Interactive Local-Only Protocol Log -->
           <div class="protocol-card">
             <div class="module-bar">
-              <span class="module-bar-title">Local-First Protocol &amp; Washout Log (Browser Memory Only)</span>
-              <span class="mono-code" style="font-size: 0.72rem; color: var(--signal-ok);">0 Network Requests</span>
+              <span class="module-bar-title">Local Protocol &amp; Washout Log (Browser Memory Only)</span>
+              <span class="mono-code" style="font-size: 0.72rem; color: var(--signal-ok);">Browser-local storage</span>
             </div>
             <div class="protocol-body">
               <form id="protocol-add-form" class="protocol-form-row" aria-label="Add compound to local protocol log">
@@ -687,17 +623,17 @@
           </div>
 
           <!-- Right: Privacy & Clinical Export Guarantee -->
-          <div class="access-card">
+          <div class="protocol-info-card">
             <div class="module-bar">
               <span class="module-bar-title">Architecture &amp; Patient Privacy Posture</span>
-              <span class="mono-code" style="font-size: 0.72rem; color: var(--text-muted);">Air-Gap Compatible</span>
+              <span class="mono-code" style="font-size: 0.72rem; color: var(--text-muted);">No search backend</span>
             </div>
-            <div class="access-body">
+            <div class="protocol-info-body">
               <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; letter-spacing: -0.015em;">
-                Why clinical research tools belong in open static code
+                What stays local, and what does not
               </h3>
               <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0 0 16px 0;">
-                Querying sensitive psychiatric, metabolic, or oncology regimens on ad-supported medical portals leaks search history to third-party data brokers. Pharmapedia ships its typography, graph engine, and graded literature dataset as static files—meaning zero backend query logs exist.
+                Pharmapedia has no search backend or analytics. To return live catalog matches, your search terms go directly from your browser to PubChem and RxNorm, which may process requests under their own policies. The protocol log is saved only in browser storage. Do not enter patient-identifying information.
               </p>
               <table class="deploy-spec-table" aria-label="Privacy and hosting specifications">
                 <tbody>
@@ -710,12 +646,12 @@
                     <td>Self-Hosted Manrope Variable (SIL OFL)</td>
                   </tr>
                   <tr>
-                    <td>Analytics / Cookies</td>
-                    <td>None (0 trackers, 0 external beacons)</td>
+                    <td>Catalog searches</td>
+                    <td>Direct requests to PubChem and RxNorm</td>
                   </tr>
                   <tr>
                     <td>Offline Operation</td>
-                    <td>Works via local clone or static bundle</td>
+                    <td>Curated profiles work; live catalog search needs internet</td>
                   </tr>
                   <tr>
                     <td>Source License</td>
@@ -727,89 +663,7 @@
           </div>
         </div>
 
-        <!-- Lifetime Access · 100% Free & Open Source Block -->
-        <div class="open-access-grid" id="open-access">
-          <div class="access-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Public Scientific Release · Unrestricted Access</span>
-              <span class="violet-brand-tag">Lifetime Access · Free</span>
-            </div>
-            <div class="access-body">
-              <div class="price-zero-row">
-                <span class="price-figure tabular">$0</span>
-                <span class="price-term">Free lifetime access · No subscription · 100% Open Source</span>
-              </div>
-              <ul class="feature-checklist">
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Full access to compound monographs, receptor affinities (<em>K</em><sub>i</sub> / EC<sub>50</sub>), and CYP450/transporter matrices.</span>
-                </li>
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Interactive multi-compound Stack Checker, Sagittal Brain Atlas, and 5-tier Evidence Grading audits.</span>
-                </li>
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Auditable open dataset (<code>data.js</code> / JSON) with clickable PubMed PMIDs, PubChem CIDs, and ChEMBL IDs.</span>
-                </li>
-                <li>
-                  <span class="check-bullet">[✓]</span>
-                  <span>Directly accessible from any GitHub Pages URL—no build server, API keys, or sign-up wall required.</span>
-                </li>
-              </ul>
 
-              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="#top" class="btn btn-primary" id="focus-search-cta">
-                  Search Compound Library Now
-                </a>
-                <button type="button" class="btn btn-secondary" id="download-dataset-btn">
-                  Download Open Dataset (.json)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="access-card">
-            <div class="module-bar">
-              <span class="module-bar-title">Self-Host, Fork, or Run from GitHub Pages</span>
-              <span class="mono-code" style="font-size: 0.72rem; color: var(--accent-coral);">z3n1thy/Pharmawiki</span>
-            </div>
-            <div class="access-body">
-              <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 12px 0;">
-                Deploy your own mirror in one click by enabling <strong>GitHub Pages</strong> on the repository root, or clone locally for offline clinic &amp; lab reference:
-              </p>
-
-              <label for="clone-cmd-input" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--stone-solid); display: block;">
-                Clone Repository (HTTPS)
-              </label>
-              <div class="clone-command-row">
-                <input
-                  type="text"
-                  id="clone-cmd-input"
-                  class="clinical-input mono-code"
-                  value="git clone https://github.com/z3n1thy/Pharmawiki.git"
-                  readonly
-                  aria-label="Git clone command"
-                />
-                <button type="button" class="btn btn-primary" id="copy-clone-btn">Copy</button>
-              </div>
-
-              <div style="margin-top: 20px; padding: 14px; background: var(--bg-canvas); border: 1px solid var(--stone-line); border-radius: var(--radius-xs); font-size: 0.8125rem; color: var(--text-secondary);">
-                <strong style="color: var(--text-primary); display: block; margin-bottom: 4px;">GitHub Website Ready (<code>.nojekyll</code> Static Root)</strong>
-                Works automatically at <code>https://z3n1thy.github.io/Pharmawiki/</code> using relative asset paths—simply set <strong>Settings → Pages</strong> to deploy from branch <code>main</code> / <code>/(root)</code>.
-              </div>
-
-              <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                <a href="https://github.com/z3n1thy/Pharmawiki" target="_blank" rel="noopener noreferrer">
-                  Open GitHub Repository →
-                </a>
-                <a href="https://github.com/z3n1thy/Pharmawiki/issues" target="_blank" rel="noopener noreferrer">
-                  Submit Study Citation / PR →
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   </main>
@@ -825,9 +679,8 @@
         <div>
           <span class="brand-wordmark" style="margin-bottom: 8px;">Pharmapedia</span>
           <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0 0 12px 0; max-width: 38ch;">
-            Open-source clinical compound library, receptor pathway mapper, and graded evidence ledger. Free forever under the MIT License.
+            Compound search, curated clinical reference profiles, pathway tools, and graded study evidence.
           </p>
-          <span class="violet-brand-tag">100% Free &amp; Open Source</span>
         </div>
 
         <div>
@@ -846,6 +699,7 @@
           <ul class="footer-links">
             <li><a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubMed / MEDLINE (NCBI)</a></li>
             <li><a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubChem Compound Database</a></li>
+            <li><a href="https://rxnav.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">RxNorm / RxNav Drug Database</a></li>
             <li><a href="https://www.ebi.ac.uk/chembl/" target="_blank" rel="noopener noreferrer">ChEMBL Bioactivity DB</a></li>
             <li><a href="https://www.guidetopharmacology.org/" target="_blank" rel="noopener noreferrer">IUPHAR / BPS Pharmacology</a></li>
             <li><a href="https://human.brain-map.org/" target="_blank" rel="noopener noreferrer">Allen Human Brain Atlas</a></li>
@@ -865,7 +719,7 @@
 
       <div class="footer-bottom">
         <span>© 2026 Pharmapedia / Pharmawiki Open Contributors · Released under the MIT License.</span>
-        <span class="mono-code">Built for GitHub Pages · Zero Tracking · Evidence-First</span>
+        <span class="mono-code">Static app · Direct catalog queries · Evidence-first</span>
       </div>
     </div>
   </footer>

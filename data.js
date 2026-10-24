@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Pharmapedia Open-Source Research Dataset (v2.4.0)
-   License: MIT — 100% Free, Auditable, Static Client-Side Dataset
+   Pharmapedia Open-Source Research Dataset (v2.5.0)
+   License: MIT — Local curated dossiers and evidence records
    Primary Provenance: PubMed / MEDLINE, NCBI Gene, PubChem, ChEMBL, IUPHAR/BPS,
    Allen Human Brain Atlas (mRNA z-scores)
    ========================================================================== */
@@ -8,21 +8,18 @@
 window.PHARMAPEDIA_DATA = {
   meta: {
     name: "Pharmapedia Open Research Library",
-    version: "2.4.0-open",
+    version: "2.5.0-open",
     license: "MIT",
     updated: "2026-10",
     repository: "https://github.com/z3n1thy/Pharmawiki",
     counts: {
-      compounds: "4,820",
-      studies: "142,680",
-      pathways: "1,194",
-      interactions: "38,410",
-      cost: "$0"
+      curatedMonographs: 8,
+      studyClaims: 12
     }
   },
 
   /* ------------------------------------------------------------------------
-     1. Compound Monographs (Hero Live Search & Dossier Snapshot)
+     1. Curated Compound Monographs (Search Detail Records)
      ------------------------------------------------------------------------ */
   monographs: [
     {
