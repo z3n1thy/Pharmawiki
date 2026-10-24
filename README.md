@@ -1,6 +1,6 @@
 # Pharmawiki — Compound & Drug Search
 
-Pharmawiki is a search-first, static pharmacology reference. Start typing in the compound search to get curated suggestions immediately and live PubChem/RxNorm options after two characters. Selecting a result opens its own shareable hash-routed detail page; the study library, pathway map, atlas, evidence grading, and browser-local protocol log are separate routed views rather than one long page.
+Pharmawiki is a search-first, static pharmacology reference. Type at least two characters to see matching curated results immediately and live PubChem/RxNorm suggestions as they arrive. Selecting a result opens its own shareable hash-routed detail page; the study library, pathway map, atlas, evidence grading, and browser-local protocol log are separate routed views rather than one long page.
 
 ## Search coverage
 
