@@ -231,14 +231,23 @@ function buildPrompt(input) {
   return { system: system, user: JSON.stringify(input) };
 }
 
+function parseJsonContent(content) {
+  if (content && typeof content === "object" && !Array.isArray(content)) return content;
+  let text = "";
+  if (typeof content === "string") text = content.trim();
+  else if (Array.isArray(content)) text = content.map(function (part) { return part && part.text || ""; }).join("").trim();
+  if (!text) throw new Error("The model returned no text.");
+  text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end <= start) throw new Error("The model did not return a JSON object.");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
 function parseModelReview(data) {
+  if (data && Object.prototype.hasOwnProperty.call(data, "response")) return parseJsonContent(data.response);
   const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-  if (typeof content === "string") return JSON.parse(content);
-  if (Array.isArray(content)) {
-    const text = content.map(function (part) { return part && part.text || ""; }).join("");
-    return JSON.parse(text);
-  }
-  throw new Error("Unexpected model response format.");
+  return parseJsonContent(content);
 }
 
 function isRateLimited(request, env, origin) {
@@ -306,17 +315,36 @@ async function handleReview(request, env, originCheck) {
     return jsonResponse({ ok: false, error: cleanText(error.message, 180) || "Review request is invalid." }, 400, cors);
   }
 
+  const backendMode = String(env.AI_BACKEND || "cloudflare").trim().toLowerCase();
+  const cloudflareAI = backendMode === "cloudflare" && env.AI && typeof env.AI.run === "function";
   const apiUrl = String(env.AI_API_URL || "").trim();
   const apiKey = String(env.AI_API_KEY || "").trim();
-  const model = String(env.AI_MODEL || "").trim();
-  if (!apiKey || !model || !validProviderUrl(apiUrl)) {
-    return jsonResponse({ ok: false, error: "AI provider settings are incomplete." }, 503, cors);
+  const model = String(env.AI_MODEL || (cloudflareAI ? "@cf/meta/llama-3.1-8b-instruct" : "")).trim();
+  const openAICompatible = backendMode === "openai-compatible" && apiKey && model && validProviderUrl(apiUrl);
+  if (!cloudflareAI && !openAICompatible) {
+    return jsonResponse({ ok: false, error: "Free AI binding or selected provider settings are unavailable." }, 503, cors);
   }
 
   const prompt = buildPrompt(input);
   const controller = new AbortController();
-  const timeout = setTimeout(function () { controller.abort(); }, 30_000);
-  try {
+  let timeout;
+  const timeoutPromise = new Promise(function (_, reject) {
+    timeout = setTimeout(function () {
+      controller.abort();
+      const error = new Error("AI request timed out.");
+      error.name = "AbortError";
+      reject(error);
+    }, 30_000);
+  });
+  const messages = [
+    { role: "system", content: prompt.system },
+    { role: "user", content: prompt.user }
+  ];
+  const operation = (async function () {
+    if (cloudflareAI) {
+      const aiResult = await env.AI.run(model, { messages: messages, temperature: 0.2, max_tokens: 1800 });
+      return { review: parseModelReview(aiResult) };
+    }
     const providerResponse = await fetch(apiUrl, {
       method: "POST",
       redirect: "error",
@@ -331,21 +359,26 @@ async function handleReview(request, env, originCheck) {
         temperature: 0.2,
         max_tokens: 1800,
         response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: prompt.system },
-          { role: "user", content: prompt.user }
-        ]
+        messages: messages
       })
     });
-    if (providerResponse.status === 429) return jsonResponse({ ok: false, error: "AI provider is rate-limiting requests." }, 429, cors);
-    if (!providerResponse.ok) return jsonResponse({ ok: false, error: "AI provider could not complete the review." }, 502, cors);
-    const providerData = await providerResponse.json();
-    const parsed = parseModelReview(providerData);
-    const review = normalizeReview(parsed, input.sources);
+    if (providerResponse.status === 429) return { status: 429 };
+    if (!providerResponse.ok) return { status: 502 };
+    return { review: parseModelReview(await providerResponse.json()) };
+  })();
+
+  try {
+    const result = await Promise.race([operation, timeoutPromise]);
+    if (result.status === 429) return jsonResponse({ ok: false, error: "AI provider is rate-limiting requests." }, 429, cors);
+    if (result.status) return jsonResponse({ ok: false, error: "AI provider could not complete the review." }, result.status, cors);
+    const review = normalizeReview(result.review, input.sources);
     return jsonResponse({ ok: true, review: review }, 200, cors);
   } catch (error) {
-    if (error && error.name === "AbortError") return jsonResponse({ ok: false, error: "AI provider request timed out." }, 504, cors);
-    return jsonResponse({ ok: false, error: "AI provider response could not be verified." }, 502, cors);
+    if (error && error.name === "AbortError") return jsonResponse({ ok: false, error: "AI request timed out." }, 504, cors);
+    if (cloudflareAI && /quota|limit|neuron|throttl|rate/i.test(String(error && error.message || ""))) {
+      return jsonResponse({ ok: false, error: "Shared Workers AI quota is temporarily exhausted. Try again after the quota resets." }, 429, cors);
+    }
+    return jsonResponse({ ok: false, error: "AI response could not be verified. The shared free service may be temporarily unavailable." }, 502, cors);
   } finally {
     clearTimeout(timeout);
   }
@@ -364,9 +397,12 @@ export default {
     }
     if (path === "/health" && request.method === "GET") {
       if (request.headers.has("Origin") && !originCheck.ok) return jsonResponse({ ok: false, error: "Origin is not allowed." }, 403, cors);
+      const backendMode = String(env && env.AI_BACKEND || "cloudflare").trim().toLowerCase();
+      const hasWorkersAI = Boolean(env && env.AI && typeof env.AI.run === "function");
+      const hasCompatibleProvider = Boolean(env && env.AI_API_URL && env.AI_API_KEY && env.AI_MODEL && validProviderUrl(env.AI_API_URL));
       return jsonResponse({
         ok: true,
-        configured: Boolean(env && env.AI_API_URL && env.AI_API_KEY && env.AI_MODEL),
+        configured: backendMode === "cloudflare" ? hasWorkersAI : backendMode === "openai-compatible" && hasCompatibleProvider,
         endpoint: "/v1/review"
       }, 200, cors);
     }

@@ -20,6 +20,7 @@ function drugBody(sources = [source()]) {
 function env(overrides = {}) {
   return Object.assign({
     ALLOWED_ORIGINS: allowedOrigin,
+    AI_BACKEND: "openai-compatible",
     AI_API_URL: "https://model.example.test/v1/chat/completions",
     AI_API_KEY: "server-only-test-key",
     AI_MODEL: "example-model",
@@ -81,6 +82,59 @@ test("fails closed when provider credentials or model settings are missing", asy
   const response = await worker.fetch(request("/v1/review", { origin: allowedOrigin, body: drugBody() }), env({ AI_API_KEY: "" }));
   assert.equal(response.status, 503);
   assert.equal((await response.json()).ok, false);
+});
+
+test("uses the free Cloudflare Workers AI binding without a provider API key", async () => {
+  const originalFetch = globalThis.fetch;
+  let chosenModel = "";
+  globalThis.fetch = function () { throw new Error("The external provider path should not be called."); };
+  try {
+    const ai = {
+      run: async function (model, options) {
+        chosenModel = model;
+        assert.equal(options.messages.length, 2);
+        return { response: JSON.stringify({
+          overview: { text: "A cautious free-model summary.", basis: "provided_source", sourceIds: ["openfda-label-0"] },
+          uses: [], sideEffects: [], seriousWarnings: [], contraindications: [], drugInteractions: [], interactionFindings: [],
+          assessment: "insufficient_evidence", confidence: "low", limitations: []
+        }) };
+      }
+    };
+    const response = await worker.fetch(request("/v1/review", {
+      origin: allowedOrigin,
+      headers: { "CF-Connecting-IP": "192.0.2.24" },
+      body: drugBody()
+    }), env({
+      AI_BACKEND: "cloudflare",
+      AI: ai,
+      AI_API_URL: "",
+      AI_API_KEY: "",
+      AI_MODEL: "@cf/meta/llama-3.1-8b-instruct"
+    }));
+    const data = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(chosenModel, "@cf/meta/llama-3.1-8b-instruct");
+    assert.equal(data.review.overview.text, "A cautious free-model summary.");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("returns a retryable response when the shared free AI quota is exhausted", async () => {
+  const response = await worker.fetch(request("/v1/review", {
+    origin: allowedOrigin,
+    headers: { "CF-Connecting-IP": "192.0.2.25" },
+    body: drugBody()
+  }), env({
+    AI_BACKEND: "cloudflare",
+    AI: { run: async function () { throw new Error("Daily neuron limit exceeded."); } },
+    AI_API_URL: "",
+    AI_API_KEY: "",
+    AI_MODEL: "@cf/meta/llama-3.1-8b-instruct"
+  }));
+  const data = await response.json();
+  assert.equal(response.status, 429);
+  assert.match(data.error, /quota is temporarily exhausted/i);
 });
 
 test("validates model output, allows only supplied citation IDs, and keeps the key server-side", async () => {

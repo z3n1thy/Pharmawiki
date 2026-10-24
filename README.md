@@ -19,23 +19,24 @@ The compound page has an **AI evidence review** action for a generated overview,
 
 The browser sends only the selected medicine names, relevant catalog facts, public openFDA label excerpts where available, and bundled reference summaries. Do not send patient details. The backend asks the model to distinguish supplied evidence from unverified model knowledge and only returns citations from the supplied source IDs. AI findings are not independently verified; inspect every cited source. A missing label section, missing interaction finding, or “no flag” result is **not** evidence that a medicine or combination is safe. The output is not a diagnosis, individualized safety determination, or treatment recommendation.
 
-The optional backend template is in [`worker/`](./worker/). It is a Cloudflare Worker (a practical server-side default for this static GitHub Pages app) and accepts an OpenAI Chat Completions-compatible provider URL and model, so no particular model vendor is selected. Provider credentials are read only from the Worker environment; **never put an API key in `ai-config.js`, `app.js`, the repository, or browser code**. The Worker validates request size, source hosts, output fields, citations, and allowed browser origins, and has a timeout and rate limiting. Its in-memory rate-limit fallback is per Worker isolate only; configure Cloudflare's shared Rate Limiting binding for production.
+The backend template is in [`worker/`](./worker/). It defaults to **Cloudflare Workers AI** through a server-side binding, using the small `@cf/meta/llama-3.1-8b-instruct` model. Site visitors need no account, subscription, or API key. The Worker owner still needs a Cloudflare account to host the shared endpoint. Workers AI has account quotas and its free allowance and terms can change; this is free to visitors, not unlimited guaranteed compute. If the shared allowance or configured rate limit is reached, reviews may pause until it resets. Keep spending controls enabled in the Cloudflare account.
 
-To enable live AI:
+The Worker validates request size, source hosts, model output, citation IDs, and allowed website origins. It has a timeout and a basic per-isolate rate limit; configure the documented Cloudflare shared Rate Limiting binding for production because the fallback is not globally shared. **Never put any API key in `ai-config.js`, `app.js`, the repository, or browser code.** An optional OpenAI-compatible backend mode remains available for operators who choose another provider; set `AI_BACKEND = "openai-compatible"`, configure `AI_API_URL` and `AI_MODEL`, and store `AI_API_KEY` with `npx wrangler secret put AI_API_KEY`. That optional mode may incur charges.
 
-1. Deploy `worker/` to Cloudflare Workers. In `worker/wrangler.toml`, set `AI_API_URL` to an HTTPS OpenAI-compatible Chat Completions endpoint, set `AI_MODEL`, and set `ALLOWED_ORIGINS` to the exact website origin(s), with no path (for this GitHub Pages project, `https://z3n1thy.github.io`). Add a local origin such as `http://localhost:8080` only for development. Do not use `*` for a public production deployment.
-2. Store the provider key as a Worker secret, not a repository variable or frontend value:
+To enable the shared free-model experience:
+
+1. Create or use a Cloudflare account with Workers AI enabled. In `worker/wrangler.toml`, keep `AI_BACKEND = "cloudflare"` and set `ALLOWED_ORIGINS` to the exact website origin(s), with no path (for this GitHub Pages project, `https://z3n1thy.github.io`). Do not use `*` for a public deployment.
+2. From `worker/`, authenticate Wrangler and deploy the Worker:
 
    ```bash
-   cd worker
-   npx wrangler secret put AI_API_KEY
+   npx wrangler login
    npx wrangler deploy
    ```
 
-3. Copy the deployed Worker base URL (the endpoint appends `/v1/review`) into `ai-config.js` as `window.PHARMAWIKI_AI_ENDPOINT = "https://your-worker.workers.dev";`. This URL is public; the provider key is not.
-4. For production, configure a Cloudflare Rate Limiting binding named `AI_RATE_LIMIT` and keep the origin allowlist narrow. Deploy the static site and Worker separately.
+3. Copy the deployed Worker base URL (the app appends `/v1/review`) into `ai-config.js` as `window.PHARMAWIKI_AI_ENDPOINT = "https://your-worker.workers.dev";`, then publish the static site. This URL is public; no model key is needed for the default Workers AI mode.
+4. For production, configure the shared Cloudflare Rate Limiting binding named `AI_RATE_LIMIT` (an example is commented in `worker/wrangler.toml`) and monitor account quotas.
 
-The backend is not deployed or connected in this repository, no provider key is included, and live AI remains disabled until an operator completes these steps. If the configured provider does not support OpenAI-compatible Chat Completions with JSON-object output, adapt the Worker provider request/response adapter server-side.
+The Worker and site URL are not deployed/configured from this repository, so live AI stays disabled until an operator completes these steps. The project does not include or request credentials.
 
 ### Label and interaction reference limits
 

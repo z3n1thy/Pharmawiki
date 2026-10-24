@@ -2,15 +2,21 @@ name = "pharmawiki-ai"
 main = "index.mjs"
 compatibility_date = "2025-04-01"
 
+# Cloudflare Workers AI is the default; site visitors do not need their own keys.
+[ai]
+binding = "AI"
+
 # Add the exact browser origin(s) that may call this Worker (no path or trailing slash).
 # Example GitHub Pages origin: https://z3n1thy.github.io
 [vars]
+AI_BACKEND = "cloudflare"
+AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
 ALLOWED_ORIGINS = "https://z3n1thy.github.io"
-AI_API_URL = ""
-AI_MODEL = ""
 REQUESTS_PER_MINUTE = "8"
+# Optional OpenAI-compatible mode requires AI_BACKEND = "openai-compatible",
+# an HTTPS AI_API_URL, and an AI_API_KEY stored with `wrangler secret put`.
+# AI_API_URL = "https://provider.example/v1/chat/completions"
 
-# Store AI_API_KEY with `npx wrangler secret put AI_API_KEY`.
 # For production, add a Cloudflare Rate Limiting binding named AI_RATE_LIMIT;
 # choose a namespace ID unique to your Cloudflare account. Example (uncomment and adapt):
 # [[unsafe.bindings]]

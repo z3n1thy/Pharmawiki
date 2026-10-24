@@ -225,8 +225,8 @@
 
   function responseMessage(response, payload) {
     var text = payload && typeof payload.error === "string" ? payload.error : "";
-    if (response.status === 429) return "AI review is temporarily rate-limited. Please wait and try again.";
-    if (response.status === 503) return "The secure AI backend is not configured yet. Check the Worker provider/model settings.";
+    if (response.status === 429) return "The shared AI limit or free allowance has been reached. Please wait and try again later.";
+    if (response.status === 503) return "The free AI service is not configured or available yet. Check the Worker AI binding and deployment.";
     if (response.status === 403) return "This site origin is not allowed by the AI backend. Add its origin to the Worker allowlist.";
     if (response.status >= 500) return "The AI backend could not complete the review. Please try again later.";
     return text ? safeText(text, 220) : "The AI backend returned an unexpected response.";
